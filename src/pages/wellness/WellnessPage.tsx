@@ -1,3 +1,6 @@
+import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { BrainCircuit } from "lucide-react";
 import { HabitTracker } from "@/components/wellness/HabitTracker";
 import { WellnessScoreCard } from "@/components/dashboard/WellnessScoreCard";
 import { SleepTimer } from "@/components/wellness/SleepTimer";
@@ -17,9 +20,11 @@ export default function WellnessPage() {
                 {/* Left Column: Score & Water & Breathing & Mood */}
                 <div className="lg:col-span-1 space-y-6">
                     <WellnessScoreCard />
+
                     <MoodTracker />
                     <BreathingExercise />
                     <WaterTracker />
+
                 </div>
 
                 {/* Right Column: Sleep Tracker & Habits */}

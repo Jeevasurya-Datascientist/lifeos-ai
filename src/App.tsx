@@ -5,17 +5,20 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Home from "./pages/dashboard/Home";
-import Login from "./pages/auth/Login";
+import BrainTrainingPage from "./pages/wellness/BrainTrainingPage";
+import LoginPage from "./pages/auth/LoginPage";
+import SignupPage from "./pages/auth/SignupPage";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import RechargeBills from "./pages/services/RechargeBills";
-import Plans from "./pages/subscription/Plans";
+import SubscriptionPage from "./pages/financial/SubscriptionPage";
 import Profile from "./pages/settings/Profile";
 import AskLifeOS from "./pages/ai/AskLifeOS";
 import { AppLayout } from "./components/layout/AppLayout";
 import TransactionsPage from "./pages/financial/TransactionsPage";
 import AnalyticsPage from "./pages/analytics/AnalyticsPage";
 import WellnessPage from "./pages/wellness/WellnessPage";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 const queryClient = new QueryClient();
 
@@ -32,8 +35,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <AppLayout>{children}</AppLayout>;
 };
 
-import { LanguageProvider } from "./contexts/LanguageContext";
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -43,18 +44,20 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               {/* Public Routes */}
-              <Route path="/login" element={<Login />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
 
               {/* Protected Routes (Wrapped in AppLayout via ProtectedRoute) */}
               <Route path="/onboarding" element={<ProtectedRoute><OnboardingFlow /></ProtectedRoute>} />
               <Route path="/recharge" element={<ProtectedRoute><RechargeBills /></ProtectedRoute>} />
-              <Route path="/subscription" element={<ProtectedRoute><Plans /></ProtectedRoute>} />
+              <Route path="/subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/ask-ai" element={<ProtectedRoute><AskLifeOS /></ProtectedRoute>} />
 
               <Route path="/transactions" element={<ProtectedRoute><TransactionsPage /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
               <Route path="/wellness" element={<ProtectedRoute><WellnessPage /></ProtectedRoute>} />
+              <Route path="/brain-training" element={<ProtectedRoute><BrainTrainingPage /></ProtectedRoute>} />
 
               <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               {/* Employer Dashboard - Protected */}
