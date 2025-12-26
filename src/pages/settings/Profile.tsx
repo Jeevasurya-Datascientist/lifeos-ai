@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, LogOut, Download, Shield, RefreshCw } from "lucide-react";
+import { ArrowLeft, Save, LogOut, Download, Shield, RefreshCw, FileText, Truck, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -98,13 +98,31 @@ export default function Profile() {
                         </div>
                     </Button>
 
-                    <Button variant="outline" className="w-full justify-start h-auto py-3 bg-white" onClick={() => toast.info("Privacy Policy coming soon")}>
-                        <Shield className="w-5 h-5 mr-3 text-slate-500" />
-                        <div className="text-left">
-                            <span className="block font-medium">Privacy & Security</span>
-                            <span className="text-xs text-muted-foreground">Manage your data permissions</span>
+                    <div className="pt-4 border-t border-slate-200">
+                        <h3 className="text-sm font-semibold text-slate-500 mb-3 px-1">Legal & Support</h3>
+                        <div className="space-y-2">
+                            <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 hover:bg-slate-100" onClick={() => navigate('/privacy-policy')}>
+                                <Shield className="w-4 h-4 mr-3 text-slate-500" />
+                                <span className="text-sm text-slate-700">Privacy Policy</span>
+                            </Button>
+                            <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 hover:bg-slate-100" onClick={() => navigate('/terms-and-conditions')}>
+                                <FileText className="w-4 h-4 mr-3 text-slate-500" />
+                                <span className="text-sm text-slate-700">Terms & Conditions</span>
+                            </Button>
+                            <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 hover:bg-slate-100" onClick={() => navigate('/refund-policy')}>
+                                <RefreshCw className="w-4 h-4 mr-3 text-slate-500" />
+                                <span className="text-sm text-slate-700">Cancellation & Refund</span>
+                            </Button>
+                            <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 hover:bg-slate-100" onClick={() => navigate('/shipping-policy')}>
+                                <Truck className="w-4 h-4 mr-3 text-slate-500" />
+                                <span className="text-sm text-slate-700">Shipping Policy</span>
+                            </Button>
+                            <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 hover:bg-slate-100" onClick={() => navigate('/contact-us')}>
+                                <Phone className="w-4 h-4 mr-3 text-slate-500" />
+                                <span className="text-sm text-slate-700">Contact Us</span>
+                            </Button>
                         </div>
-                    </Button>
+                    </div>
 
                     <Button variant="destructive" className="w-full mt-6" onClick={handleLogout}>
                         <LogOut className="w-4 h-4 mr-2" /> Logout

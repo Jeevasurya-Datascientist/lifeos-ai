@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, Mail, Lock, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -33,89 +33,79 @@ export default function LoginPage() {
         }
     };
 
-    const handleGoogleLogin = async () => {
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: "google",
-                options: {
-                    redirectTo: `${window.location.origin}/`,
-                },
-            });
-            if (error) throw error;
-        } catch (error: any) {
-            console.error("Google login error:", error);
-            toast.error("Failed to start Google login");
-        }
-    };
-
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-            <Card className="w-full max-w-md shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-                <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-indigo-600 to-teal-600 text-transparent bg-clip-text">
-                        LifeOS AI
+        <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4 relative overflow-hidden">
+            {/* Dynamic Background Elements */}
+            <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-600/20 blur-[100px] animate-pulse" />
+            <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-violet-600/20 blur-[100px] animate-pulse delay-1000" />
+
+            <Card className="w-full max-w-md shadow-2xl border-white/10 bg-white/5 backdrop-blur-xl text-white relative z-10">
+                <CardHeader className="space-y-3 text-center pb-8 pt-8">
+                    <div className="mx-auto w-12 h-12 bg-gradient-to-tr from-indigo-500 to-violet-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25 mb-2">
+                        <Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                    <CardTitle className="text-3xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                        Welcome Back
                     </CardTitle>
-                    <CardDescription className="text-center">
-                        Sign in to access your personal dashboard
+                    <CardDescription className="text-slate-400 text-base">
+                        Sign in to continue your journey
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <Button
-                        variant="outline"
-                        className="w-full relative"
-                        onClick={handleGoogleLogin}
-                    >
-                        <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                            <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
-                        </svg>
-                        Continue with Google
-                    </Button>
-
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
-                        </div>
-                    </div>
+                <CardContent className="space-y-6">
 
                     <form onSubmit={handleEmailLogin} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="m@example.com"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
+                            <Label htmlFor="email" className="text-slate-300">Email Address</Label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-3 h-5 w-5 text-slate-500" />
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="name@example.com"
+                                    required
+                                    className="pl-10 h-11 bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-indigo-500/20"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="password" className="text-slate-300">Password</Label>
+                                <a href="#" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">Forgot password?</a>
+                            </div>
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-500" />
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    required
+                                    className="pl-10 h-11 bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-indigo-500/20"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                            </div>
                         </div>
-                        <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                            Sign In
+                        <Button type="submit" className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-500/20 transition-all" disabled={loading}>
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <div className="flex items-center">Sign In <ArrowRight className="ml-2 w-4 h-4" /></div>}
                         </Button>
                     </form>
                 </CardContent>
-                <CardFooter className="flex justify-center">
-                    <p className="text-sm text-muted-foreground">
+                <CardFooter className="flex justify-center pb-8">
+                    <p className="text-sm text-slate-400">
                         Don't have an account?{" "}
-                        <Link to="/signup" className="text-indigo-600 hover:underline font-medium">
-                            Sign up
+                        <Link to="/signup" className="text-indigo-400 hover:text-indigo-300 hover:underline font-medium transition-colors">
+                            Create free account
                         </Link>
                     </p>
                 </CardFooter>
+                <div className="mt-8 text-center text-slate-400 text-xs flex flex-wrap justify-center gap-4">
+                    <a href="/privacy-policy" className="hover:text-emerald-400 transition-colors">Privacy Policy</a>
+                    <a href="/terms-and-conditions" className="hover:text-emerald-400 transition-colors">Terms & Conditions</a>
+                    <a href="/refund-policy" className="hover:text-emerald-400 transition-colors">Refund Policy</a>
+                    <a href="/shipping-policy" className="hover:text-emerald-400 transition-colors">Shipping Policy</a>
+                    <a href="/contact-us" className="hover:text-emerald-400 transition-colors">Contact Us</a>
+                </div>
             </Card>
         </div>
     );

@@ -4,21 +4,31 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import { AppLayout } from "./components/layout/AppLayout";
+
+// Pages
 import Home from "./pages/dashboard/Home";
-import BrainTrainingPage from "./pages/wellness/BrainTrainingPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
+import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import RechargeBills from "./pages/services/RechargeBills";
 import SubscriptionPage from "./pages/financial/SubscriptionPage";
-import Profile from "./pages/settings/Profile";
-import AskLifeOS from "./pages/ai/AskLifeOS";
-import { AppLayout } from "./components/layout/AppLayout";
 import TransactionsPage from "./pages/financial/TransactionsPage";
 import AnalyticsPage from "./pages/analytics/AnalyticsPage";
 import WellnessPage from "./pages/wellness/WellnessPage";
-import { LanguageProvider } from "./contexts/LanguageContext";
+import BrainTrainingPage from "./pages/wellness/BrainTrainingPage";
+import AskLifeOS from "./pages/ai/AskLifeOS";
+import Profile from "./pages/settings/Profile";
+
+// Legal Pages
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import ShippingPolicy from "./pages/legal/ShippingPolicy";
+import ContactUs from "./pages/legal/ContactUs";
+import TermsAndConditions from "./pages/legal/TermsAndConditions";
+import RefundPolicy from "./pages/legal/RefundPolicy";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +56,14 @@ const App = () => (
               {/* Public Routes */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+
+              {/* Legal Routes */}
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/shipping-policy" element={<ShippingPolicy />} />
+              <Route path="/contact-us" element={<ContactUs />} />
+              <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
 
               {/* Protected Routes (Wrapped in AppLayout via ProtectedRoute) */}
               <Route path="/onboarding" element={<ProtectedRoute><OnboardingFlow /></ProtectedRoute>} />

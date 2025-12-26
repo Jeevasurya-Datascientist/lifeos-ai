@@ -18,28 +18,93 @@ export default function Home() {
     const { t } = useLanguage();
     const navigate = useNavigate();
     const [balance, setBalance] = useState<number | null>(null);
+    const [monthlySpend, setMonthlySpend] = useState(0);
+    const [budget, setBudget] = useState(20000); // Default fallback
+    const [wellnessScore, setWellnessScore] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!user) return;
 
-        const fetchWallet = async () => {
-            const { data } = await supabase
+        const fetchData = async () => {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+            const today = now.toISOString().split('T')[0];
+
+            // 1. Fetch Wallet
+            const walletPromise = supabase
                 .from("wallets")
                 .select("balance")
                 .eq("user_id", user.id)
                 .maybeSingle();
 
-            if (data) {
-                setBalance(data.balance);
-            } else {
-                // Handle creation/fetch failure gracefully for MVP
-                setBalance(0);
+            // 2. Fetch Monthly Spend
+            const spendPromise = supabase
+                .from("transactions")
+                .select("amount")
+                .eq("user_id", user.id)
+                .eq("type", "expense")
+                .gte("date", startOfMonth);
+
+            // 3. Fetch Budget (from onboarding income or settings)
+            const onboardingPromise = supabase
+                .from("onboarding_responses")
+                .select("income_range, fixed_expenses")
+                .eq("user_id", user.id)
+                .maybeSingle();
+
+            // 4. Fetch Wellness for Today
+            const wellnessPromise = supabase
+                .from("wellness_entries")
+                .select("type, value")
+                .eq("user_id", user.id)
+                .eq("date", today);
+
+            const [walletRes, spendRes, onboardingRes, wellnessRes] = await Promise.all([
+                walletPromise,
+                spendPromise,
+                onboardingPromise,
+                wellnessPromise
+            ]);
+
+            // Set Balance
+            setBalance(walletRes.data?.balance ?? 0);
+
+            // Set Spend
+            const totalSpend = spendRes.data?.reduce((sum, t) => sum + t.amount, 0) || 0;
+            setMonthlySpend(totalSpend);
+
+            // Set Budget (Simple Logic: Income lower bound * 0.4 or default 20k)
+            if (onboardingRes.data?.income_range) {
+                // Example range: "50000-100000". Take 50000.
+                const lowerBound = parseInt(onboardingRes.data.income_range.split('-')[0].replace(/[^0-9]/g, '')) || 50000;
+                setBudget(Math.floor(lowerBound * 0.4)); // Assume 40% for discretionary spend
             }
+
+            // Calculate Wellness Score
+            if (wellnessRes.data) {
+                let sleepMinutes = 0;
+                let waterMl = 0;
+                wellnessRes.data.forEach(entry => {
+                    if (entry.type === 'sleep') sleepMinutes += Number(entry.value);
+                    if (entry.type === 'water') waterMl += Number(entry.value);
+                });
+
+                // Scoring Logic:
+                // Sleep: 420m (7h) = 50 points
+                // Water: 2000ml = 50 points
+                const sleepScore = Math.min((sleepMinutes / 420) * 50, 50);
+                const waterScore = Math.min((waterMl / 2000) * 50, 50);
+                setWellnessScore(Math.round(sleepScore + waterScore));
+            }
+
             setLoading(false);
         };
 
-        fetchWallet();
+        fetchData();
+
+        // Realtime Subscriptions could be added here similar to TransactionsList
+        // For MVP dashboard, fetch on mount is acceptable, or use a context.
     }, [user]);
 
     const handleLogout = async () => {
@@ -49,13 +114,16 @@ export default function Home() {
 
     const suggestion = getDailySuggestion(new Date().getHours(), balance || 0);
 
+    // Derived UI values
+    const spendPercentage = Math.min((monthlySpend / budget) * 100, 100);
+
     return (
         <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
             {/* 1. Header Section */}
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-                        {t('hello')}, <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">{user?.profile?.full_name || user?.phone || "User"}</span>
+                        {t('hello')}, <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">{user?.user_metadata?.full_name || user?.phone || "User"}</span>
                     </h1>
                     <p className="text-slate-500 font-medium mt-1">{t('welcome')}</p>
                 </div>
@@ -107,7 +175,9 @@ export default function Home() {
                         <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-100 transition-colors">
                             <Wallet className="w-6 h-6" />
                         </div>
-                        <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+4.2%</span>
+                        <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                            {balance && balance > 0 ? "Active" : "add money"}
+                        </span>
                     </div>
                     <div className="space-y-1">
                         <h3 className="text-sm font-medium text-slate-500">Total Balance</h3>
@@ -128,11 +198,16 @@ export default function Home() {
                     <div className="space-y-1">
                         <h3 className="text-sm font-medium text-slate-500">Spending</h3>
                         <div className="flex items-baseline gap-2">
-                            <p className="text-2xl font-bold text-slate-800">₹12,450</p>
-                            <span className="text-xs text-slate-400">/ ₹20k Budget</span>
+                            <p className="text-2xl font-bold text-slate-800">
+                                {loading ? "..." : `₹${monthlySpend.toLocaleString()}`}
+                            </p>
+                            <span className="text-xs text-slate-400">/ ₹{(budget / 1000).toFixed(0)}k</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-100 rounded-full mt-3 overflow-hidden">
-                            <div className="h-full bg-rose-500 w-[62%] rounded-full"></div>
+                            <div
+                                className={`h-full rounded-full transition-all duration-500 ${spendPercentage > 90 ? "bg-red-500" : "bg-rose-500"}`}
+                                style={{ width: `${spendPercentage}%` }}
+                            ></div>
                         </div>
                     </div>
                 </div>
@@ -143,17 +218,25 @@ export default function Home() {
                         <div className="p-3 bg-teal-50 text-teal-600 rounded-lg group-hover:bg-teal-100 transition-colors">
                             <Heart className="w-6 h-6" />
                         </div>
-                        <span className="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-1 rounded-full">Good</span>
+                        <span className="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-1 rounded-full">
+                            {wellnessScore >= 80 ? "Excellent" : wellnessScore >= 50 ? "Good" : "Needs Focus"}
+                        </span>
                     </div>
                     <div className="space-y-1">
                         <h3 className="text-sm font-medium text-slate-500">Wellness Score</h3>
                         <div className="flex items-center gap-4">
-                            <p className="text-3xl font-bold text-slate-800">84</p>
-                            <div className="flex gap-1">
-                                <div className="w-2 h-8 bg-teal-500 rounded-sm opacity-40"></div>
-                                <div className="w-2 h-8 bg-teal-500 rounded-sm opacity-60"></div>
-                                <div className="w-2 h-8 bg-teal-500 rounded-sm"></div>
-                                <div className="w-2 h-8 bg-slate-200 rounded-sm"></div>
+                            <p className="text-3xl font-bold text-slate-800">
+                                {loading ? "..." : wellnessScore}
+                            </p>
+                            <div className="flex gap-1 h-8 items-end">
+                                {/* Simple visualization of score */}
+                                {[20, 40, 60, 80, 100].map((step) => (
+                                    <div
+                                        key={step}
+                                        className={`w-2 rounded-sm transition-all duration-500 ${wellnessScore >= step ? "bg-teal-500" : "bg-slate-200"}`}
+                                        style={{ height: `${step}%` }}
+                                    ></div>
+                                ))}
                             </div>
                         </div>
                     </div>
