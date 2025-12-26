@@ -11,6 +11,8 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import Home from "./pages/dashboard/Home";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import UpdatePasswordPage from "./pages/auth/UpdatePasswordPage";
 import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import EmployerDashboard from "./pages/EmployerDashboard";
@@ -55,6 +57,8 @@ const App = () => (
               {/* Public Routes */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/update-password" element={<UpdatePasswordPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
 
               {/* Legal Routes */}

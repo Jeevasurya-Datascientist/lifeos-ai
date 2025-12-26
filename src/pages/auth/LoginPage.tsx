@@ -80,7 +80,7 @@ export default function LoginPage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <Label htmlFor="password" className="text-slate-300">Password</Label>
-                                <a href="#" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">Forgot password?</a>
+                                <Link to="/forgot-password" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">Forgot password?</Link>
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-500" />
