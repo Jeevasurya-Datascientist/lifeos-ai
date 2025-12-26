@@ -14,6 +14,7 @@ export interface Database {
                     id: string
                     phone: string | null
                     language: string
+                    avatar_url: string | null
                     created_at: string
                 }
                 Insert: {

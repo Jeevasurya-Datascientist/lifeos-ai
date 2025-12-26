@@ -14,7 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Wallet, TrendingDown, Heart, Sparkles, Activity } from "lucide-react";
 
 export default function Home() {
-    const { user, signOut } = useAuth();
+    const { user, signOut, profile } = useAuth();
     const { t } = useLanguage();
     const navigate = useNavigate();
     const [balance, setBalance] = useState<number | null>(null);
@@ -103,13 +103,10 @@ export default function Home() {
 
         fetchData();
 
-        // Realtime Subscriptions could be added here similar to TransactionsList
-        // For MVP dashboard, fetch on mount is acceptable, or use a context.
     }, [user]);
 
     const handleLogout = async () => {
         await signOut();
-        navigate("/login");
     };
 
     const suggestion = getDailySuggestion(new Date().getHours(), balance || 0);
@@ -132,8 +129,12 @@ export default function Home() {
                     <Button variant="outline" className="rounded-full border-slate-200 hover:bg-slate-50 text-slate-600" onClick={handleLogout}>
                         {t('logout')}
                     </Button>
-                    <div onClick={() => navigate("/profile")} className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-200 cursor-pointer hover:scale-105 transition-transform">
-                        {user?.phone ? user.phone.slice(-2) : "U"}
+                    <div onClick={() => navigate("/profile")} className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-200 cursor-pointer hover:scale-105 transition-transform overflow-hidden">
+                        {profile?.avatar_url ? (
+                            <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            user?.phone ? user.phone.slice(-2) : "U"
+                        )}
                     </div>
                 </div>
             </header>

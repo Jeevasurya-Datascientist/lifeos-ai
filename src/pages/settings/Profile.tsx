@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -7,21 +7,22 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, LogOut, Download, Shield, RefreshCw, FileText, Truck, Phone } from "lucide-react";
+import { ArrowLeft, Save, LogOut, Download, Shield, RefreshCw, FileText, Truck, Phone, Camera, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Profile() {
-    const { user, signOut } = useAuth();
+    const { user, signOut, refreshProfile, profile } = useAuth();
     const navigate = useNavigate();
     const { language, setLanguage } = useLanguage();
     const [loading, setLoading] = useState(false);
-    const [avatarSeed, setAvatarSeed] = useState(user?.id || "seed");
+    const [avatarLoading, setAvatarLoading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleSave = async () => {
         setLoading(true);
-        // Simulate save
+        // Simulate save - validation would go here
         setTimeout(() => {
             setLoading(false);
             toast.success("Profile updated successfully!");
@@ -30,11 +31,48 @@ export default function Profile() {
 
     const handleLogout = async () => {
         await signOut();
-        navigate("/login");
     };
 
     const handleExport = () => {
         toast.info("Exporting your data... Check your email.");
+    };
+
+    const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        try {
+            if (!event.target.files || event.target.files.length === 0 || !user) {
+                return;
+            }
+            setAvatarLoading(true);
+            const file = event.target.files[0];
+            const fileExt = file.name.split('.').pop();
+            const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ avatar_url: publicUrl })
+                .eq('id', user.id);
+
+            if (updateError) throw updateError;
+
+            await refreshProfile();
+            toast.success("Avatar updated!");
+
+        } catch (error: any) {
+            console.error("Error uploading avatar:", error);
+            toast.error("Error uploading avatar");
+        } finally {
+            setAvatarLoading(false);
+        }
     };
 
     return (
@@ -50,18 +88,32 @@ export default function Profile() {
                 {/* Profile Card */}
                 <Card>
                     <CardHeader className="flex flex-col items-center gap-4">
-                        <div className="relative group cursor-pointer" onClick={() => setAvatarSeed(Math.random().toString())}>
+                        <div
+                            className="relative group cursor-pointer"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
                             <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
-                                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`} />
-                                <AvatarFallback>U</AvatarFallback>
+                                <AvatarImage src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`} className="object-cover" />
+                                <AvatarFallback>{user?.user_metadata?.full_name?.[0] || "U"}</AvatarFallback>
                             </Avatar>
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                                <RefreshCw className="w-6 h-6 text-white" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                {avatarLoading ?
+                                    <Loader2 className="w-6 h-6 text-white animate-spin" /> :
+                                    <Camera className="w-6 h-6 text-white" />
+                                }
                             </div>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleAvatarUpload}
+                                disabled={avatarLoading}
+                            />
                         </div>
                         <div className="text-center">
-                            <CardTitle>My Profile</CardTitle>
-                            <CardDescription>{user?.phone}</CardDescription>
+                            <CardTitle>{user?.user_metadata?.full_name || "User"}</CardTitle>
+                            <CardDescription>{user?.email || user?.phone}</CardDescription>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">

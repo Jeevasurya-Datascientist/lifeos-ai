@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +10,18 @@ import { Loader2, Rocket, User, Mail, Lock, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SignupPage() {
+    const { user, loading: authLoading } = useAuth();
     const navigate = useNavigate();
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (user && !authLoading) {
+            navigate("/");
+        }
+    }, [user, authLoading, navigate]);
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,7 +46,7 @@ export default function SignupPage() {
             } else {
                 // Auto login or no verification
                 toast.success("Welcome to LifeOS AI!");
-                navigate("/");
+                // Navigation handled by useEffect
             }
 
         } catch (error: any) {

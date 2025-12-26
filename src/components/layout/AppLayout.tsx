@@ -20,7 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-    const { user, signOut } = useAuth();
+    const { user, signOut, profile } = useAuth();
     const { t } = useLanguage();
     const navigate = useNavigate();
     const location = useLocation();
@@ -28,7 +28,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
     const handleLogout = async () => {
         await signOut();
-        navigate("/login");
     };
 
     const menuItems = [
@@ -132,8 +131,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Profile Section */}
             <div className="p-4 border-t border-slate-900 bg-slate-950/50 mt-auto relative z-10">
                 <div onClick={() => { navigate("/profile"); setOpen(false) }} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-900 transition-colors cursor-pointer group">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-md border-2 border-slate-900 group-hover:border-indigo-500/50 transition-colors">
-                        {user?.email?.charAt(0).toUpperCase() || "U"}
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-md border-2 border-slate-900 group-hover:border-indigo-500/50 transition-colors overflow-hidden">
+                        {profile?.avatar_url ? (
+                            <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            user?.email?.charAt(0).toUpperCase() || "U"
+                        )}
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-white truncate">{user?.email?.split('@')[0] || "User"}</p>
@@ -168,8 +171,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <span className="font-bold text-lg text-slate-900">LifeOS AI</span>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
-                        {user?.phone?.slice(-2) || "U"}
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold overflow-hidden">
+                        {profile?.avatar_url ? (
+                            <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            user?.phone?.slice(-2) || "U"
+                        )}
                     </div>
                 </Button>
             </header>

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 export interface Profile {
     id: string;
     email: string;
+    avatar_url?: string | null;
     subscription_tier: 'free' | 'pro' | 'lifetime';
     razorpay_customer_id?: string;
     razorpay_subscription_id?: string;
@@ -79,8 +80,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setSession(null);
             setProfile(null);
         } else {
-            await supabase.auth.signOut();
-            setProfile(null);
+            try {
+                await supabase.auth.signOut();
+            } catch (error) {
+                console.error("Error signing out:", error);
+            } finally {
+                // Always clear local state
+                setUser(null);
+                setSession(null);
+                setProfile(null);
+                setLoading(false);
+            }
         }
     };
 
@@ -92,62 +102,98 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     useEffect(() => {
+        let mounted = true;
+
+        // Backup timeout to prevent infinite loading
+        const loadingTimeout = setTimeout(() => {
+            if (mounted) setLoading(false);
+        }, 2500);
+
         // Check for mock auth first
         if (localStorage.getItem("lifeos_mock_auth")) {
-            setUser(MOCK_USER);
-            setSession({
-                user: MOCK_USER,
-                access_token: "mock-token",
-                refresh_token: "mock-refresh-token",
-                token_type: "bearer",
-                expires_in: 3600,
-                expires_at: Math.floor(Date.now() / 1000) + 3600,
-            });
-            setProfile(MOCK_PROFILE);
-            setLoading(false);
+            if (mounted) {
+                setUser(MOCK_USER);
+                setSession({
+                    user: MOCK_USER,
+                    access_token: "mock-token",
+                    refresh_token: "mock-refresh-token",
+                    token_type: "bearer",
+                    expires_in: 3600,
+                    expires_at: Math.floor(Date.now() / 1000) + 3600,
+                });
+                setProfile(MOCK_PROFILE);
+                setLoading(false);
+                clearTimeout(loadingTimeout);
+            }
             return;
         }
 
-        // Check active sessions and sets the user
-        const initSession = async () => {
+        const initAuth = async () => {
             try {
+                // Get initial session
                 const { data: { session }, error } = await supabase.auth.getSession();
+
                 if (error) throw error;
-                setSession(session);
-                setUser(session?.user ?? null);
-                if (session?.user) {
-                    const p = await fetchProfile(session.user.id);
-                    setProfile(p);
+
+                if (mounted) {
+                    setSession(session);
+                    setUser(session?.user ?? null);
+
+                    if (session?.user) {
+                        try {
+                            const p = await fetchProfile(session.user.id);
+                            if (mounted) setProfile(p);
+                        } catch (err) {
+                            console.error("Profile fetch failed:", err);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("Auth initialization error:", error);
             } finally {
-                setLoading(false);
+                if (mounted) {
+                    setLoading(false);
+                    clearTimeout(loadingTimeout);
+                }
             }
         };
-        initSession();
 
-        // Listen for changes on auth state (logged in, signed out, etc.)
+        initAuth();
+
+        // Listen for changes
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            if (session?.user) {
-                const p = await fetchProfile(session.user.id);
-                setProfile(p);
-            } else {
-                setProfile(null);
+            if (mounted) {
+                setSession(session);
+                setUser(session?.user ?? null);
+
+                if (session?.user) {
+                    // We don't await this to block UI updates for auth state change? 
+                    // Actually better to show generic UI then pop in profile data if slow.
+                    // But for consistent auth state, we might want to wait. 
+                    // For now, let's fetch.
+                    fetchProfile(session.user.id).then(p => {
+                        if (mounted) setProfile(p);
+                    });
+                } else {
+                    setProfile(null);
+                }
+                setLoading(false);
+                clearTimeout(loadingTimeout);
             }
-            setLoading(false);
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            mounted = false;
+            clearTimeout(loadingTimeout);
+            subscription.unsubscribe();
+        };
     }, []);
 
     return (
         <AuthContext.Provider value={{ user, session, profile, loading, signOut, refreshProfile }}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };
