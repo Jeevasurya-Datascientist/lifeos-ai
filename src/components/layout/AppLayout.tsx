@@ -87,7 +87,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <h3 className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Finance</h3>
                     {[
                         { icon: CreditCard, label: "Transactions", path: "/transactions" },
-                        { icon: Wallet, label: "Services & Bills", path: "/recharge" },
                         { icon: LineChart, label: "Analytics", path: "/analytics" },
                         { icon: Zap, label: "Subscription", path: "/subscription" },
                     ].map((item) => (

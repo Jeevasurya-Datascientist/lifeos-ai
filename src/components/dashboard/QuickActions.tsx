@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Zap, Receipt, MessageCircle } from "lucide-react";
+import { MessageCircle, CreditCard, LineChart } from "lucide-react";
 import { toast } from "sonner";
 
 import { useNavigate } from "react-router-dom";
@@ -11,18 +11,18 @@ export function QuickActions() {
             <Button
                 variant="outline"
                 className="flex flex-col items-center h-auto py-4 space-y-2"
-                onClick={() => navigate("/recharge")}
+                onClick={() => navigate("/transactions")}
             >
-                <Zap className="h-6 w-6 text-yellow-500" />
-                <span className="text-xs">Recharge</span>
+                <CreditCard className="h-6 w-6 text-purple-500" />
+                <span className="text-xs">Add Expense</span>
             </Button>
             <Button
                 variant="outline"
                 className="flex flex-col items-center h-auto py-4 space-y-2"
-                onClick={() => navigate("/recharge")}
+                onClick={() => navigate("/analytics")}
             >
-                <Receipt className="h-6 w-6 text-blue-500" />
-                <span className="text-xs">Pay Bills</span>
+                <LineChart className="h-6 w-6 text-blue-500" />
+                <span className="text-xs">Analytics</span>
             </Button>
             <Button
                 variant="outline"
