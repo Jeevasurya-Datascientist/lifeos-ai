@@ -9,6 +9,8 @@ export interface Profile {
     subscription_tier: 'free' | 'pro' | 'lifetime';
     razorpay_customer_id?: string;
     razorpay_subscription_id?: string;
+    skills?: string[] | null;
+    points?: number;
 }
 
 interface AuthContextType {
@@ -34,7 +36,9 @@ const MOCK_USER: User = {
 const MOCK_PROFILE: Profile = {
     id: "11111111-1111-4111-8111-111111111111",
     email: "demo@lifeos.ai",
-    subscription_tier: 'free'
+    subscription_tier: 'free',
+    skills: [],
+    points: 0
 };
 
 const AuthContext = createContext<AuthContextType>({

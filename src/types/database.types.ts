@@ -16,18 +16,24 @@ export interface Database {
                     language: string
                     avatar_url: string | null
                     created_at: string
+                    skills: string[] | null
+                    points: number
                 }
                 Insert: {
                     id: string
                     phone?: string | null
                     language?: string
                     created_at?: string
+                    skills?: string[] | null
+                    points?: number
                 }
                 Update: {
                     id?: string
                     phone?: string | null
                     language?: string
                     created_at?: string
+                    skills?: string[] | null
+                    points?: number
                 }
             }
             onboarding_responses: {

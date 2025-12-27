@@ -1,47 +1,57 @@
-// @ts-ignore
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-// @ts-ignore
-import Razorpay from "npm:razorpay@2.9.2";
 
-console.log("Razorpay Subscription Function Initialized")
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-serve(async (req: Request) => {
-    // CORS
+serve(async (req) => {
     if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' } })
+        return new Response('ok', { headers: corsHeaders })
     }
 
     try {
-        const { plan_id, total_count = 1200 } = await req.json()
+        const { plan_id } = await req.json()
+        const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID')
+        const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET')
 
-        // Initialize Razorpay
-        // Initialize Razorpay
-        // @ts-ignore
-        const instance = new Razorpay({
-            // @ts-ignore
-            key_id: Deno.env.get('RAZORPAY_KEY_ID') ?? '',
-            // @ts-ignore
-            key_secret: Deno.env.get('RAZORPAY_KEY_SECRET') ?? '',
+        if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+            throw new Error("Missing Razorpay Keys")
+        }
+
+        // Create Subscription via Razorpay API (using fetch for Deno compatibility without npm)
+        const auth = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
+
+        // Default: 10 years (120 months) or 5 years. 
+        // Razorpay requires 'total_count'. 
+        const response = await fetch('https://api.razorpay.com/v1/subscriptions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Basic ${auth}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                plan_id: plan_id,
+                total_count: 120, // 10 Years
+                quantity: 1,
+                customer_notify: 1
+            })
         });
 
-        const options = {
-            plan_id: plan_id,
-            total_count: total_count,
-            quantity: 1,
-            customer_notify: 1,
-        };
+        const data = await response.json();
 
-        const subscription = await instance.subscriptions.create(options);
+        if (!response.ok) {
+            throw new Error(data.error?.description || "Failed to create subscription");
+        }
 
         return new Response(
-            JSON.stringify(subscription),
-            { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } },
+            JSON.stringify(data),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
-    } catch (error: any) {
-        console.error(error);
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        })
+    } catch (error) {
+        return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
     }
 })

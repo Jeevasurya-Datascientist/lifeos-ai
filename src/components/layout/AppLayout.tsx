@@ -14,7 +14,8 @@ import {
     LogOut,
     Wallet,
     BrainCircuit,
-    CalendarCheck
+    CalendarCheck,
+    Briefcase
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -66,6 +67,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     {[
                         { icon: LayoutDashboard, label: "Dashboard", path: "/" },
                         { icon: Bot, label: "Ask LifeOS", path: "/ask-ai" },
+                        { icon: Briefcase, label: "Career Growth", path: "/career" },
                         { icon: CalendarCheck, label: "Calendar", path: "/calendar" }, // Assuming this exists or will exist, mostly strictly following existing but grouping
                     ].filter(i => i.path !== "/calendar").map((item) => ( // Filter out Calendar if not exists, but keep structure
                         <Link

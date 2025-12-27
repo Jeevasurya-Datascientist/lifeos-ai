@@ -15,7 +15,12 @@ interface Message {
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 
 export default function AskLifeOS() {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
+
+    // Pro Gating Logic
+    const isPro = profile?.subscription_tier === 'pro' || profile?.subscription_tier === 'lifetime';
+    const MODEL = isPro ? "mixtral-8x7b-32768" : "llama-3.3-70b-versatile"; // Use Mixtral for Pro (simulating "Advanced")
+
     const [messages, setMessages] = useState<Message[]>([
         { role: "assistant", content: `Hi! I'm your LifeOS Assistant. I can help you analyze your spending, suggest budget tips, or just chat about your financial wellness.` }
     ]);
@@ -50,7 +55,7 @@ export default function AskLifeOS() {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    model: "llama-3.3-70b-versatile",
+                    model: MODEL,
                     messages: [
                         { role: "system", content: "You are 'Life OS Assistant', a helpful, friendly, and motivational AI assistant for personal life management. user_context: { balance: 'fetch_if_asked' }. Keep answers concise and actionable." },
                         ...messages.map(m => ({ role: m.role, content: m.content })),
@@ -96,7 +101,9 @@ export default function AskLifeOS() {
                     <Bot className="w-6 h-6 text-indigo-600" />
                 </div>
                 <div>
-                    <h1 className="font-bold text-lg">Ask LifeOS</h1>
+                    <h1 className="font-bold text-lg">Ask LifeOS <span className="text-xs font-normal text-slate-500">
+                        ({isPro ? 'Pro • Mixtral 8x7B' : 'Basic • Llama 3'})
+                    </span></h1>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> Online & Ready
                     </p>
@@ -115,8 +122,8 @@ export default function AskLifeOS() {
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm max-w-[85%] md:max-w-[75%] ${m.role === 'user'
-                                        ? 'bg-slate-900 text-white rounded-tr-sm'
-                                        : 'bg-slate-50 text-slate-800 border border-slate-100 rounded-tl-sm'
+                                    ? 'bg-slate-900 text-white rounded-tr-sm'
+                                    : 'bg-slate-50 text-slate-800 border border-slate-100 rounded-tl-sm'
                                     }`}>
                                     {m.content}
                                 </div>
