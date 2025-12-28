@@ -72,7 +72,7 @@ export default function Home() {
     return (
         <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 space-y-8 max-w-[1600px] mx-auto pb-24">
             {/* 1. Header Section */}
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/60 backdrop-blur-xl p-6 rounded-2xl border border-white/50 shadow-sm sticky top-4 z-40 transition-all duration-300">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/60 backdrop-blur-xl p-6 rounded-2xl border border-white/50 shadow-sm relative transition-all duration-300">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
                         {t('hello')}, <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-indigo-600 animate-in fade-in">{user?.user_metadata?.full_name || "User"}</span>

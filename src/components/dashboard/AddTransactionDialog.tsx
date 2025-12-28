@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { PlusCircle } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -67,8 +67,8 @@ export function AddTransactionDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="fixed bottom-20 md:bottom-6 right-6 rounded-full w-14 h-14 shadow-lg p-0 z-40">
-                    <PlusCircle className="w-8 h-8" />
+                <Button className="fixed bottom-20 md:bottom-8 right-6 rounded-full w-14 h-14 shadow-xl shadow-teal-900/20 p-0 z-40 bg-gradient-to-tr from-teal-600 to-emerald-500 hover:from-teal-500 hover:to-emerald-400 border-2 border-white/20 transition-all hover:scale-110 active:scale-95">
+                    <Plus className="w-6 h-6 text-white" />
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
