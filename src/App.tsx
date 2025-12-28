@@ -27,6 +27,13 @@ import DailyNewsPage from "./pages/career/DailyNewsPage";
 import CareerPage from "./pages/career/CareerPage";
 import AskLifeOS from "./pages/ai/AskLifeOS";
 import Profile from "./pages/settings/Profile";
+import NotesPage from "./pages/features/NotesPage";
+import WakeUpRoutine from "./pages/wellness/WakeUpRoutine";
+import SleepPage from "./pages/wellness/SleepPage";
+import WaterPage from "./pages/wellness/WaterPage";
+import HabitsPage from "./pages/wellness/HabitsPage";
+import MindfulnessPage from "./pages/wellness/MindfulnessPage";
+import JournalPage from "./pages/wellness/JournalPage";
 
 // Legal Pages
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
@@ -82,6 +89,14 @@ const App = () => (
               <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
               <Route path="/wellness" element={<ProtectedRoute><WellnessPage /></ProtectedRoute>} />
               <Route path="/brain-training" element={<ProtectedRoute><BrainTrainingPage /></ProtectedRoute>} />
+              <Route path="/brain-training" element={<ProtectedRoute><BrainTrainingPage /></ProtectedRoute>} />
+              <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
+              <Route path="/wellness/routine" element={<ProtectedRoute><WakeUpRoutine /></ProtectedRoute>} />
+              <Route path="/wellness/sleep" element={<ProtectedRoute><SleepPage /></ProtectedRoute>} />
+              <Route path="/wellness/water" element={<ProtectedRoute><WaterPage /></ProtectedRoute>} />
+              <Route path="/wellness/habits" element={<ProtectedRoute><HabitsPage /></ProtectedRoute>} />
+              <Route path="/wellness/mindfulness" element={<ProtectedRoute><MindfulnessPage /></ProtectedRoute>} />
+              <Route path="/wellness/journal" element={<ProtectedRoute><JournalPage /></ProtectedRoute>} />
               <Route path="/brain-training/game/:gameId" element={<ProtectedRoute><BrainGamePage /></ProtectedRoute>} />
               <Route path="/career/news" element={<ProtectedRoute><DailyNewsPage /></ProtectedRoute>} />
               <Route path="/career" element={<ProtectedRoute><CareerPage /></ProtectedRoute>} />

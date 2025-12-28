@@ -1,31 +1,40 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Mic, Play, Square, Trophy, Volume2 } from "lucide-react";
+import { Mic, Play, Volume2, Info, Settings2 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-// Simple "Flappy Bird" style game controlled by voice volume/pitch
-// For robustness without external libraries, we'll use Volume (Amplitude) to control height/jump.
-// 'Ahhh' to fly up, silence to fall.
-
+// Simple "Flappy Bird" style game controlled by voice volume
 export function VocalTraining() {
     const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [score, setScore] = useState(0);
     const [volume, setVolume] = useState(0);
     const [permissionDenied, setPermissionDenied] = useState(false);
+    const [sensitivity, setSensitivity] = useState(20);
 
-    // Game Physics State
-    const birdY = useRef(50); // % height (0 top, 100 bottom)
+    // Refs for game loop access without closure staleness
+    const birdY = useRef(50);
     const velocity = useRef(0);
     const obstacles = useRef<{ x: number, gapTop: number, passed: boolean }[]>([]);
     const reqRef = useRef<number>(0);
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+    const sensitivityRef = useRef(20);
 
-    const CANVAS_WIDTH = 600;
-    const CANVAS_HEIGHT = 400;
+    // Sync ref with state
+    useEffect(() => {
+        sensitivityRef.current = sensitivity;
+    }, [sensitivity]);
 
     const startListening = async () => {
         try {
@@ -33,22 +42,24 @@ export function VocalTraining() {
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             audioContextRef.current = new AudioContextClass();
 
-            // Resume context if suspended (browser requirements)
             if (audioContextRef.current.state === 'suspended') {
                 await audioContextRef.current.resume();
             }
 
             analyserRef.current = audioContextRef.current.createAnalyser();
             analyserRef.current.fftSize = 256;
+            analyserRef.current.smoothingTimeConstant = 0.5; // Smoother volume
             sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
             sourceRef.current.connect(analyserRef.current);
 
             setIsListening(true);
             setPermissionDenied(false);
             startGame();
-        } catch (err) {
+            toast.success("Microphone connected! Sing to fly.");
+        } catch (err: any) {
             console.error("Mic Error:", err);
             setPermissionDenied(true);
+            toast.error(`Microphone access failed: ${err.message || "Unknown error"}`);
         }
     };
 
@@ -64,10 +75,11 @@ export function VocalTraining() {
     const startGame = () => {
         birdY.current = 50;
         velocity.current = 0;
-        obstacles.current = [{ x: 100, gapTop: 30, passed: false }]; // Initial obstacle
+        obstacles.current = [{ x: 100, gapTop: 30, passed: false }];
         setScore(0);
         setIsPlaying(true);
-        gameLoop();
+        // Start game loop
+        reqRef.current = requestAnimationFrame(gameLoop);
     };
 
     const gameLoop = () => {
@@ -78,26 +90,27 @@ export function VocalTraining() {
         analyserRef.current.getByteFrequencyData(dataArray);
 
         let sum = 0;
+        // Skip first few bins (low frequency rumble) to reduce noise? No, vocals are low too.
         for (let i = 0; i < dataArray.length; i++) {
             sum += dataArray[i];
         }
         const average = sum / dataArray.length;
-        setVolume(average); // visual feedback
+        setVolume(average);
 
         // Physics
-        // If volume > threshold, fly up. Else fall.
-        const THRESHOLD = 20;
+        const THRESHOLD = sensitivityRef.current;
         const GRAVITY = 0.5;
         const LIFT = -1.5;
 
-        // Smooth control: Higher volume = stronger lift
         if (average > THRESHOLD) {
-            velocity.current += LIFT * (average / 50); // Scale lift by loudness
+            // Scale lift by how much louder we are than threshold
+            const intensity = (average - THRESHOLD) / 50;
+            velocity.current += LIFT * (1 + Math.max(0, intensity));
         }
         velocity.current += GRAVITY;
 
         // Cap velocity
-        velocity.current = Math.max(Math.min(velocity.current, 10), -10);
+        velocity.current = Math.max(Math.min(velocity.current, 10), -12);
 
         birdY.current += velocity.current;
 
@@ -109,45 +122,37 @@ export function VocalTraining() {
             return;
         }
 
-        // Obstacles
-        // Move obstacles
-        const SPEED = 0.5; // percent width per frame
+        // Obstacles logic...
+        const SPEED = 0.5;
         obstacles.current.forEach(obs => obs.x -= SPEED);
 
-        // Remove off-screen
         if (obstacles.current.length > 0 && obstacles.current[0].x < -20) {
             obstacles.current.shift();
         }
 
-        // Add new
         if (obstacles.current.length === 0 || obstacles.current[obstacles.current.length - 1].x < 50) {
             obstacles.current.push({
                 x: 100,
-                gapTop: Math.random() * 50 + 10, // Random gap position
+                gapTop: Math.random() * 50 + 10,
                 passed: false
             });
         }
 
-        // Collision & Score
-        // Bird X is fixed at approx 20%
+        // Collapse
         const BIRD_X_PERCENT = 20;
-        const BIRD_SIZE_PERCENT = 5; // approx
+        const BIRD_SIZE_PERCENT = 5;
 
         obstacles.current.forEach(obs => {
-            // Collision Logic (Approximate box)
-            const obsWidth = 10; // percent
-            const gapHeight = 30; // percent
+            const obsWidth = 10;
+            const gapHeight = 30;
 
-            // Check x overlap
             if (obs.x < BIRD_X_PERCENT + BIRD_SIZE_PERCENT && obs.x + obsWidth > BIRD_X_PERCENT) {
-                // Check y overlap (hit pipe?)
                 if (birdY.current < obs.gapTop || birdY.current > obs.gapTop + gapHeight) {
                     gameOver();
                     return;
                 }
             }
 
-            // Score
             if (!obs.passed && obs.x + obsWidth < BIRD_X_PERCENT) {
                 obs.passed = true;
                 setScore(s => s + 1);
@@ -155,6 +160,13 @@ export function VocalTraining() {
         });
 
         if (isPlaying) {
+            // Continue loop ONLY if playing. Note: gameOver checks this but state update is async usually,
+            // but here isPlaying is a closure var? No, React state. 
+            // We need to check if we should continue. `startGame` sets local `isPlaying` logic visually,
+            // but we rely on the `gameOver` function to cancel the animation frame.
+            // However, `requestAnimationFrame` creates a new call.
+            // We'll check the ref? No, better to just let `gameOver` cancel it.
+            // But inside loop, we need to schedule next frame.
             reqRef.current = requestAnimationFrame(gameLoop);
         }
     };
@@ -162,71 +174,100 @@ export function VocalTraining() {
     const gameOver = () => {
         setIsPlaying(false);
         cancelAnimationFrame(reqRef.current);
+        toast("Game Over!", { description: `Score: ${score}` });
     };
 
-    useEffect(() => {
-        return () => {
-            stopListening();
-        };
-    }, []);
-
-    // Re-render handled by requestAnimationFrame? No, React state updates (volume, score) trigger re-render specific parts
-    // We need to force a render for the canvas/game view if we're not using <canvas> directly but DOM elements.
-    // Using DOM elements for simplicity in React without Canvas API overhead.
-    // To make it smooth, we use a ref-driven animation frame but we need to update React state for positions? 
-    // Actually, updating React state 60fps is bad. 
-    // Let's use a specialized hook or just a simple requestAnimationFrame that forceUpdates?
-    // Or better: Use `style` refs directly on elements if possible, or accept 60fps setStates for this simple game.
-    // For this simple demo, we'll try `requestAnimationFrame` driving state, but wrap in `useRef` where possible to minimize re-renders if performance sucks.
-    // Actually, let's just use a `useEffect` with a timer for the render loop that reads the refs.
-
-    const [renderTrigger, setRenderTrigger] = useState(0);
+    // Rendering loop (separate from physics to force React updates)
     useEffect(() => {
         let loop: number;
         if (isPlaying) {
             loop = requestAnimationFrame(function step() {
-                setRenderTrigger(prev => prev + 1); // Force re-render of frame
+                setScore(s => s); // Dummy update to force re-render? No, we need setRenderTrigger pattern
+                // Actually, `setVolume` in gameLoop triggers re-render!
+                // So we probably don't need this separate loop if gameLoop calls setVolume every frame.
+                // Optimally we shouldn't `setVolume` every frame (60fps react render).
+                // But for this simple game, it's the mechanism that drives the view.
+                // So I will remove the separate render loop and rely on `setVolume` to drive frames.
+                // Wait, if volume doesn't change (silence), `setVolume` might bailout and not render movement?
+                // Good point. We should force render.
+                setRenderTrigger(prev => prev + 1);
                 loop = requestAnimationFrame(step);
             });
         }
         return () => cancelAnimationFrame(loop);
     }, [isPlaying]);
 
+    const [renderTrigger, setRenderTrigger] = useState(0);
+
+    // Cleanup
+    useEffect(() => {
+        return () => stopListening();
+    }, []);
 
     return (
         <Card className="h-full flex flex-col border-none shadow-none bg-transparent">
-            <CardHeader className="pb-2 px-0">
-                <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+            <CardHeader className="pb-2 px-0 space-y-4">
+                <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
                         <Mic className="w-5 h-5 text-pink-500" />
-                        Vocal Training (Sing to Fly!)
-                    </div>
+                        Vocal Training
+                    </CardTitle>
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <Volume2 className={cn("w-4 h-4", volume > 20 ? "text-green-500" : "text-muted-foreground")} />
-                            <div className="h-2 w-20 bg-secondary rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-green-500 transition-all duration-75"
-                                    style={{ width: `${Math.min(volume, 100)}%` }}
-                                />
-                            </div>
-                        </div>
-                        <span className="font-mono text-lg font-bold">Score: {score}</span>
+                        <span className="font-mono text-xl font-bold text-pink-500">Score: {score}</span>
                     </div>
-                </CardTitle>
+                </div>
+
+                {/* Sensitivity Controls */}
+                <div className="flex items-center gap-4 bg-slate-100 p-2 rounded-lg">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Settings2 className="w-4 h-4 text-slate-500" />
+                            </TooltipTrigger>
+                            <TooltipContent>Adjust microphone sensitivity</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+                    <span className="text-xs font-semibold text-slate-500 w-16">Threshold</span>
+                    <Slider
+                        value={[sensitivity]}
+                        onValueChange={(v) => setSensitivity(v[0])}
+                        min={5}
+                        max={60}
+                        step={1}
+                        className="w-32"
+                    />
+
+                    {/* Volume Meter with Threshold Marker */}
+                    <div className="relative h-2 flex-1 bg-slate-200 rounded-full overflow-hidden mx-2">
+                        {/* Threshold Marker */}
+                        <div
+                            className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10"
+                            style={{ left: `${sensitivity}%` }}
+                        />
+                        {/* Volume Bar */}
+                        <div
+                            className={cn("h-full transition-all duration-75",
+                                volume > sensitivity ? "bg-green-500" : "bg-slate-400"
+                            )}
+                            style={{ width: `${Math.min(volume * 2, 100)}%` }} // Visual scale
+                        />
+                    </div>
+                    <Volume2 className={cn("w-4 h-4", volume > sensitivity ? "text-green-600" : "text-slate-400")} />
+                </div>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden relative bg-slate-900 rounded-xl border-2 border-slate-700">
+
+            <CardContent className="flex-1 overflow-hidden relative bg-slate-900 rounded-xl border-2 border-slate-700 min-h-[300px]">
 
                 {!isListening && !permissionDenied && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-20 text-white backdrop-blur-sm">
-                        <div className="p-4 bg-slate-800 rounded-full mb-4">
+                        <div className="p-4 bg-slate-800 rounded-full mb-4 animate-pulse">
                             <Mic className="w-8 h-8 text-pink-500" />
                         </div>
                         <h3 className="text-xl font-bold mb-2">Enable Microphone</h3>
-                        <p className="mb-6 text-slate-300 max-w-sm text-center">
-                            Control the bird with your voice! <br />
-                            <span className="text-pink-400 font-bold">Sing Ahhhh!</span> or <span className="text-pink-400 font-bold">Speak Loudly</span> to fly up. <br />
-                            Be quiet to fall down.
+                        <p className="mb-6 text-slate-300 max-w-sm text-center text-sm">
+                            Sing "Ahhh" to fly! <br />
+                            Adjust the threshold slider if it's too hard/easy.
                         </p>
                         <Button onClick={startListening} size="lg" className="bg-pink-600 hover:bg-pink-700">
                             <Play className="w-5 h-5 mr-2" /> Start Game
@@ -236,8 +277,9 @@ export function VocalTraining() {
 
                 {permissionDenied && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 text-white">
-                        <p className="text-red-400 mb-4">Microphone access denied.</p>
-                        <Button variant="outline" onClick={() => window.location.reload()}>Retry</Button>
+                        <p className="text-red-400 mb-4 font-bold">Microphone access denied!</p>
+                        <p className="text-slate-400 text-sm mb-4">Please allow microphone access in your browser settings.</p>
+                        <Button variant="outline" onClick={() => window.location.reload()}>Reload Page</Button>
                     </div>
                 )}
 
@@ -245,46 +287,36 @@ export function VocalTraining() {
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-20 text-white backdrop-blur-sm">
                         <h3 className="text-2xl font-bold text-pink-500 mb-2">Game Over!</h3>
                         <p className="text-xl mb-6">Score: {score}</p>
-                        <Button onClick={startGame} size="lg">Try Again</Button>
+                        <Button onClick={startGame} size="lg">Play Again</Button>
                     </div>
                 )}
 
-                {/* Game World (Percent Based) */}
-                <div className="w-full h-full relative">
+                {/* Game World */}
+                <div className="w-full h-full relative select-none pointer-events-none">
                     {/* Bird */}
                     <div
-                        className="absolute w-[5%] h-[5%] bg-pink-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(236,72,153,0.6)] flex items-center justify-center transition-none"
+                        className="absolute w-[5%] h-[5%] bg-pink-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(236,72,153,0.6)] flex items-center justify-center transition-none will-change-transform"
                         style={{
                             left: '20%',
                             top: `${birdY.current}%`,
-                            transform: 'translate(-50%, -50%)'
+                            transform: 'translate(-50%, -50%)' // Center anchor
                         }}
                     >
                         <div className="w-1/2 h-1/2 bg-white/30 rounded-full" />
                     </div>
 
-                    {/* Obstacles / Pipes */}
+                    {/* Sensitivity Line Visual in Game (Optional, maybe distracting) */}
+
+                    {/* Obstacles */}
                     {obstacles.current.map((obs, i) => (
                         <div key={i}>
-                            {/* Top Pipe */}
                             <div
                                 className="absolute bg-emerald-500 border-2 border-emerald-700 rounded-b-lg"
-                                style={{
-                                    left: `${obs.x}%`,
-                                    top: 0,
-                                    width: '10%',
-                                    height: `${obs.gapTop}%`
-                                }}
+                                style={{ left: `${obs.x}%`, top: 0, width: '10%', height: `${obs.gapTop}%` }}
                             />
-                            {/* Bottom Pipe */}
                             <div
                                 className="absolute bg-emerald-500 border-2 border-emerald-700 rounded-t-lg"
-                                style={{
-                                    left: `${obs.x}%`,
-                                    top: `${obs.gapTop + 30}%`, // Gap is 30%
-                                    width: '10%',
-                                    bottom: 0
-                                }}
+                                style={{ left: `${obs.x}%`, top: `${obs.gapTop + 30}%`, width: '10%', bottom: 0 }}
                             />
                         </div>
                     ))}

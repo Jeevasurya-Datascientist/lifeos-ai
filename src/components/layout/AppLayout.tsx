@@ -15,7 +15,8 @@ import {
     Wallet,
     BrainCircuit,
     CalendarCheck,
-    Briefcase
+    Briefcase,
+    StickyNote
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -66,6 +67,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <h3 className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Main</h3>
                     {[
                         { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+                        { icon: StickyNote, label: "Sticky Notes", path: "/notes" },
                         { icon: Bot, label: "Ask LifeOS", path: "/ask-ai" },
                         { icon: Briefcase, label: "Career Growth", path: "/career" },
                         { icon: CalendarCheck, label: "Calendar", path: "/calendar" }, // Assuming this exists or will exist, mostly strictly following existing but grouping

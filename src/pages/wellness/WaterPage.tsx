@@ -1,0 +1,20 @@
+import { WaterTracker } from "@/components/wellness/WaterTracker";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+
+export default function WaterPage() {
+    const navigate = useNavigate();
+    return (
+        <div className="max-w-4xl mx-auto p-6 space-y-6">
+            <Button variant="ghost" onClick={() => navigate("/wellness")} className="gap-2">
+                <ArrowLeft className="w-4 h-4" /> Back to Wellness
+            </Button>
+            <div className="space-y-2">
+                <h1 className="text-3xl font-bold text-slate-900">Hydration 💧</h1>
+                <p className="text-slate-500">Stay hydrated to keep your mind sharp.</p>
+            </div>
+            <WaterTracker />
+        </div>
+    );
+}
