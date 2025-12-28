@@ -109,10 +109,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         let mounted = true;
 
-        // Backup timeout to prevent infinite loading
+        // Backup timeout to prevent infinite loading state
         const loadingTimeout = setTimeout(() => {
-            if (mounted) setLoading(false);
-        }, 2500);
+            if (mounted && loading) setLoading(false);
+        }, 10000); // 10s generous timeout
 
         // Check for mock auth first
         if (localStorage.getItem("lifeos_mock_auth")) {
@@ -133,68 +133,78 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             return;
         }
 
-        const initAuth = async () => {
+        const initializeAuth = async () => {
             try {
-                // Get initial session
-                const { data: { session }, error } = await supabase.auth.getSession();
+                // 1. Get initial session
+                const { data: { session: initialSession }, error } = await supabase.auth.getSession();
 
-                if (error) throw error;
+                // Only throw if it's a real error, not just "no session"
+                if (error) {
+                    console.error("Error getting session:", error);
+                    // Don't sign out automatically here, just assume no user for now.
+                    // Let onAuthStateChange handle the definitive state.
+                }
 
-                if (mounted) {
-                    setSession(session);
-                    setUser(session?.user ?? null);
+                if (mounted && initialSession) {
+                    setSession(initialSession);
+                    setUser(initialSession.user);
 
-                    if (session?.user) {
+                    // Fetch profile immediately if we have a session
+                    if (initialSession.user) {
                         try {
-                            const p = await fetchProfile(session.user.id);
+                            const p = await fetchProfile(initialSession.user.id);
                             if (mounted) setProfile(p);
                         } catch (err) {
                             console.error("Profile fetch failed:", err);
                         }
                     }
                 }
-            } catch (error) {
-                console.error("Auth initialization error:", error);
-                // If the refresh token is invalid, force a sign out to clear stale data
-                if (error instanceof Error && (error.message.includes("Invalid Refresh Token") || error.message.includes("Refresh Token Not Found"))) {
-                    console.warn("Detected invalid refresh token, clearing session.");
-                    await supabase.auth.signOut();
-                    // Fallback: Clear all Supabase tokens from local storage
-                    Object.keys(localStorage).forEach(key => {
-                        if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
-                            localStorage.removeItem(key);
-                        }
-                    });
-                }
+            } catch (err) {
+                console.error("Auth initialization unexpected error:", err);
             } finally {
                 if (mounted) {
-                    setLoading(false);
-                    clearTimeout(loadingTimeout);
+                    // We don't verify loading=false here yet, we wait for the listener or just set it.
+                    // Actually, getting session is enough to stop loading if we have mapped it.
+                    // But onAuthStateChange will fire immediately after this usually.
+                    // Let's rely on the listener to finalize 'loading' state if possible, 
+                    // but we must ensure we unset loading if there is NO session.
+
+                    // If we have no initial session, we might be done loading (viewer is guest).
+                    // But let's verify with the listener.
                 }
             }
         };
 
-        initAuth();
+        initializeAuth();
 
-        // Listen for changes
+        // 2. Set up auth state listener
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            if (mounted) {
-                setSession(session);
-                setUser(session?.user ?? null);
+        } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+            // console.log("Auth State Change:", event, currentSession?.user?.id);
 
-                if (session?.user) {
-                    // We don't await this to block UI updates for auth state change? 
-                    // Actually better to show generic UI then pop in profile data if slow.
-                    // But for consistent auth state, we might want to wait. 
-                    // For now, let's fetch.
-                    fetchProfile(session.user.id).then(p => {
+            if (mounted) {
+                setSession(currentSession);
+                setUser(currentSession?.user ?? null);
+
+                if (currentSession?.user) {
+                    // Optimized: Only fetch profile if ID changed or we don't have it
+                    // But to be safe for "refresh" button logic, we can fetch.
+                    // We'll rely on the internal profile check inside fetchProfile or simple overwrite.
+                    fetchProfile(currentSession.user.id).then(p => {
                         if (mounted) setProfile(p);
                     });
                 } else {
                     setProfile(null);
+                    // If we signed out, ensure we clear data
+                    if (event === 'SIGNED_OUT') {
+                        setUser(null);
+                        setSession(null);
+                        setProfile(null);
+                    }
                 }
+
+                // This is the most reliable place to stop loading
                 setLoading(false);
                 clearTimeout(loadingTimeout);
             }
