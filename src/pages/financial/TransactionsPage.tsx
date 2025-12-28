@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { TransactionsList } from "@/components/dashboard/TransactionsList";
-import { AddTransactionDialog } from "@/components/dashboard/AddTransactionDialog";
+
 import { BudgetOverview } from "@/components/financial/BudgetOverview";
 import { getAICompletion } from "@/lib/aiService";
 import { Button } from "@/components/ui/button";
@@ -159,10 +159,7 @@ export default function TransactionsPage() {
                 </div>
             </header>
 
-            {/* Budget Overview */}
-            <BudgetOverview currentSpend={monthlyStats.expense} />
-
-            {/* Upcoming Bills Section */}
+            {/* Upcoming Bills Section (MOVED TO TOP) */}
             {upcomingBills.length > 0 && (
                 <div className="bg-white rounded-xl border border-indigo-100 p-4 shadow-sm space-y-3">
                     <div className="flex items-center justify-between">
@@ -216,11 +213,14 @@ export default function TransactionsPage() {
                 </div>
             )}
 
+            {/* Budget Overview */}
+            <BudgetOverview currentSpend={monthlyStats.expense} />
+
             <div className="grid gap-6">
                 <TransactionsList limit={50} />
             </div>
 
-            <AddTransactionDialog />
+
 
             {/* AI Insight Modal */}
             <Dialog open={showInsight} onOpenChange={setShowInsight}>

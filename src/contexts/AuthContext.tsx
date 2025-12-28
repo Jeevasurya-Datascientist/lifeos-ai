@@ -11,6 +11,7 @@ export interface Profile {
     razorpay_subscription_id?: string;
     skills?: string[] | null;
     points?: number;
+    total_points?: number;
 }
 
 interface AuthContextType {

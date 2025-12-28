@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { TransactionsList } from "@/components/dashboard/TransactionsList";
-import { AddTransactionDialog } from "@/components/dashboard/AddTransactionDialog";
+
 import { UpcomingBills } from "@/components/dashboard/UpcomingBills";
 import { Notifications } from "@/components/dashboard/Notifications";
 import { getDailySuggestion } from "@/lib/suggestion-engine";
@@ -85,6 +85,10 @@ export default function Home() {
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
+                    <div onClick={() => navigate("/brain-training")} className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-full font-bold shadow-sm border border-yellow-200 cursor-pointer hover:bg-yellow-100 transition-colors">
+                        <Trophy className="w-4 h-4 text-yellow-600" />
+                        <span className="text-sm">{profile?.total_points || 0}</span>
+                    </div>
                     <Notifications />
                     <div onClick={() => navigate("/profile")} className="group relative cursor-pointer">
                         <div className="w-11 h-11 rounded-full p-[2px] bg-gradient-to-tr from-violet-500 to-fuchsia-500">
@@ -146,7 +150,7 @@ export default function Home() {
                             <h3 className="text-slate-500 font-medium">LifeOS Points</h3>
                             <div className="flex items-baseline gap-1 mt-1">
                                 <span className="text-4xl font-bold text-slate-800 tabular-nums tracking-tight">
-                                    {profile?.points?.toLocaleString() || 0}
+                                    {profile?.total_points?.toLocaleString() || 0}
                                 </span>
                                 <span className="text-sm text-slate-400 font-medium">pts</span>
                             </div>
@@ -158,7 +162,7 @@ export default function Home() {
                                     <span>Next Reward</span>
                                     <span>500 pts</span>
                                 </div>
-                                <Progress value={((profile?.points || 0) / 500) * 100} className="h-2 bg-amber-100" indicatorClassName="bg-gradient-to-r from-amber-400 to-orange-500" />
+                                <Progress value={((profile?.total_points || 0) / 500) * 100} className="h-2 bg-amber-100" indicatorClassName="bg-gradient-to-r from-amber-400 to-orange-500" />
                             </div>
                             <Button variant="ghost" className="w-full justify-between group-hover:bg-amber-100/50 text-amber-700 hover:text-amber-800">
                                 Redeem Rewards <Gift className="w-4 h-4" />
@@ -282,7 +286,7 @@ export default function Home() {
                 </div>
             </div>
 
-            <AddTransactionDialog />
+
         </div>
     );
 }

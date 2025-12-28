@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Brain, Gamepad2, Play, Lock, Crown, Zap, Grid3X3, Eye, Type, Calculator, Mic, Hammer } from "lucide-react";
@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { BrainTrainingSettings, getThemeGradient } from "@/components/wellness/BrainTrainingSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { Trophy } from "lucide-react";
 
 // Game Data Definition
 interface GameDef {
@@ -184,7 +186,13 @@ export default function BrainTrainingPage() {
                     </h1>
                     <p className="text-muted-foreground">Train your cognitive skills with daily puzzles.</p>
                 </div>
-                <BrainTrainingSettings currentTheme={theme} onThemeChange={handleThemeChange} />
+                <div className="flex items-center gap-4">
+                    <Link to="/brain-training" className="flex items-center gap-2 px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-full font-bold shadow-sm border border-yellow-200 hover:bg-yellow-200 transition-colors cursor-pointer">
+                        <Trophy className="w-4 h-4" />
+                        <span>{profile?.total_points || 0}</span>
+                    </Link>
+                    <BrainTrainingSettings currentTheme={theme} onThemeChange={handleThemeChange} />
+                </div>
             </header>
 
             {!isPro && (

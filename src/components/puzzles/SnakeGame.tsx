@@ -5,6 +5,7 @@ import { Trophy, Play, RotateCcw, ChevronUp, ChevronDown, ChevronLeft, ChevronRi
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // Types
 type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
@@ -47,9 +48,8 @@ export function SnakeGame() {
 
     const saveScore = async (finalScore: number) => {
         if (!user) return;
-        // Only save if it's a decent score to avoid spam, or always save?
-        // Let's always save for history, or maybe just update high score logic if needed.
-        // For this simple implementation, we insert a new record.
+
+        // 1. Save High Score
         await supabase.from('brain_training_scores').insert({
             user_id: user.id,
             game_type: 'snake',
@@ -59,6 +59,25 @@ export function SnakeGame() {
 
         if (finalScore > highScore) {
             setHighScore(finalScore);
+        }
+
+        // 2. Award Coins (Rewards System)
+        // 1 Coin per 5 points
+        const coinsEarned = Math.floor(finalScore / 5);
+        if (coinsEarned > 0) {
+            const { error } = await supabase.from('user_rewards').insert({
+                user_id: user.id,
+                amount: coinsEarned,
+                source: 'game_snake',
+                description: `Scored ${finalScore} in Snake`
+            });
+
+            if (!error) {
+                toast.success(`+${coinsEarned} Coins Earned! 🪙`, {
+                    description: "Great job! Keep playing to earn more.",
+                    duration: 3000,
+                });
+            }
         }
     };
 

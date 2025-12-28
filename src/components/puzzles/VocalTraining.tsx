@@ -5,6 +5,7 @@ import { Mic, Play, Volume2, Info, Settings2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useGameRewards } from "@/hooks/useGameRewards";
 import {
     Tooltip,
     TooltipContent,
@@ -14,6 +15,7 @@ import {
 
 // Simple "Flappy Bird" style game controlled by voice volume
 export function VocalTraining() {
+    const { saveGameScore } = useGameRewards();
     const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [score, setScore] = useState(0);
@@ -72,11 +74,14 @@ export function VocalTraining() {
         cancelAnimationFrame(reqRef.current);
     };
 
+    const scoreRef = useRef(0);
+
     const startGame = () => {
         birdY.current = 50;
         velocity.current = 0;
         obstacles.current = [{ x: 100, gapTop: 30, passed: false }];
         setScore(0);
+        scoreRef.current = 0;
         setIsPlaying(true);
         // Start game loop
         reqRef.current = requestAnimationFrame(gameLoop);
@@ -90,7 +95,6 @@ export function VocalTraining() {
         analyserRef.current.getByteFrequencyData(dataArray);
 
         let sum = 0;
-        // Skip first few bins (low frequency rumble) to reduce noise? No, vocals are low too.
         for (let i = 0; i < dataArray.length; i++) {
             sum += dataArray[i];
         }
@@ -103,7 +107,6 @@ export function VocalTraining() {
         const LIFT = -1.5;
 
         if (average > THRESHOLD) {
-            // Scale lift by how much louder we are than threshold
             const intensity = (average - THRESHOLD) / 50;
             velocity.current += LIFT * (1 + Math.max(0, intensity));
         }
@@ -155,18 +158,12 @@ export function VocalTraining() {
 
             if (!obs.passed && obs.x + obsWidth < BIRD_X_PERCENT) {
                 obs.passed = true;
-                setScore(s => s + 1);
+                scoreRef.current += 1;
+                setScore(scoreRef.current);
             }
         });
 
         if (isPlaying) {
-            // Continue loop ONLY if playing. Note: gameOver checks this but state update is async usually,
-            // but here isPlaying is a closure var? No, React state. 
-            // We need to check if we should continue. `startGame` sets local `isPlaying` logic visually,
-            // but we rely on the `gameOver` function to cancel the animation frame.
-            // However, `requestAnimationFrame` creates a new call.
-            // We'll check the ref? No, better to just let `gameOver` cancel it.
-            // But inside loop, we need to schedule next frame.
             reqRef.current = requestAnimationFrame(gameLoop);
         }
     };
@@ -174,7 +171,9 @@ export function VocalTraining() {
     const gameOver = () => {
         setIsPlaying(false);
         cancelAnimationFrame(reqRef.current);
-        toast("Game Over!", { description: `Score: ${score}` });
+        // Save score: 1 point = 1 obstacle passed. Rate 0.5: 10 passed = 5 coins.
+        saveGameScore('vocal_flappy', scoreRef.current, 0.5);
+        toast("Game Over!", { description: `Score: ${scoreRef.current}` });
     };
 
     // Rendering loop (separate from physics to force React updates)

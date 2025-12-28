@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Trophy, RefreshCcw, X, Circle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGameRewards } from "@/hooks/useGameRewards";
 import { cn } from "@/lib/utils";
 
 type Player = 'X' | 'O' | null;
@@ -11,6 +12,7 @@ type Winner = 'X' | 'O' | 'DRAW' | null;
 
 export function TicTacToe() {
     const { user } = useAuth();
+    const { saveGameScore } = useGameRewards();
     const [board, setBoard] = useState<Player[]>(Array(9).fill(null));
     const [isXNext, setIsXNext] = useState(true); // User is always X (starts first mostly, or alternating)
     const [winner, setWinner] = useState<Winner>(null);
@@ -40,16 +42,11 @@ export function TicTacToe() {
     };
 
     const saveWin = async () => {
-        if (!user) return;
         const newWins = score.wins + 1;
         setScore(prev => ({ ...prev, wins: newWins }));
 
-        await supabase.from('brain_training_scores').insert({
-            user_id: user.id,
-            game_type: 'tictactoe_wins',
-            score: newWins, // Cumulative wins as "score" for leaderboard
-            metadata: { date: new Date().toISOString() }
-        });
+        // 50 points for a win -> ~10 coins (0.2 rate)
+        await saveGameScore('tictactoe', 50, 0.2);
     };
 
     const checkWinner = (squares: Player[]): Winner => {

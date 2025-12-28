@@ -5,10 +5,12 @@ import { Timer, Trophy, Play, Hammer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGameRewards } from "@/hooks/useGameRewards";
 import { toast } from "sonner";
 
 export function WhackAMole() {
     const { user } = useAuth();
+    const { saveGameScore } = useGameRewards();
     const [score, setScore] = useState(0);
     const [timeLeft, setTimeLeft] = useState(30);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -90,41 +92,8 @@ export function WhackAMole() {
     };
 
     const saveScore = async () => {
-        if (!user) return;
-        // Save points logic will be handled by parent or here? 
-        // Let's just save score to brain_training_scores for now.
-        // And maybe update points profile?
-
-        try {
-            // Save Score
-            await supabase.from('brain_training_scores').insert({
-                user_id: user.id,
-                game_type: 'whack-a-mole',
-                score: score,
-                metadata: { date: new Date().toISOString() }
-            });
-
-            // Update Reward Points (e.g. 1 point per 100 score)
-            const reward = Math.floor(score / 10);
-            if (reward > 0) {
-                const { error } = await supabase.rpc('increment_points', { amount: reward });
-
-                if (error) {
-                    // Fallback to manual update
-                    try {
-                        const { data: profile } = await supabase.from('profiles').select('points').eq('id', user.id).single();
-                        const currentPoints = profile?.points || 0;
-                        await supabase.from('profiles').update({ points: currentPoints + reward }).eq('id', user.id);
-                    } catch (err) {
-                        console.error("Failed to update points manually", err)
-                    }
-                }
-                toast.success(`Game Over! You earned ${reward} points 🏆`);
-            }
-
-        } catch (e) {
-            console.error("Error saving score", e);
-        }
+        // Rate 0.2: 100 score = 20 coins
+        await saveGameScore('whack-a-mole', score, 0.2);
     };
 
     useEffect(() => {

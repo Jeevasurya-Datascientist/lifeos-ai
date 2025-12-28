@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
+import { AddTransactionDialog } from "@/components/dashboard/AddTransactionDialog";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import {
     LayoutDashboard,
     CreditCard,
@@ -79,9 +80,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${location.pathname === item.path
                                 ? "bg-indigo-600 shadow-lg shadow-indigo-900/20 text-white"
                                 : "text-slate-400 hover:bg-slate-900/50 hover:text-white"
-                                }`}
+                                } `}
                         >
-                            <item.icon className={`w-5 h-5 transition-colors ${location.pathname === item.path ? "text-white" : "text-slate-500 group-hover:text-indigo-400"}`} />
+                            <item.icon className={`w-5 h-5 transition-colors ${location.pathname === item.path ? "text-white" : "text-slate-500 group-hover:text-indigo-400"} `} />
                             <span className="font-medium text-sm">{item.label}</span>
                         </Link>
                     ))}
@@ -101,9 +102,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${location.pathname === item.path
                                 ? "bg-indigo-600 shadow-lg shadow-indigo-900/20 text-white"
                                 : "text-slate-400 hover:bg-slate-900/50 hover:text-white"
-                                }`}
+                                } `}
                         >
-                            <item.icon className={`w-5 h-5 transition-colors ${location.pathname === item.path ? "text-white" : "text-slate-500 group-hover:text-cyan-400"}`} />
+                            <item.icon className={`w-5 h-5 transition-colors ${location.pathname === item.path ? "text-white" : "text-slate-500 group-hover:text-cyan-400"} `} />
                             <span className="font-medium text-sm">{item.label}</span>
                         </Link>
                     ))}
@@ -122,9 +123,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${location.pathname === item.path
                                 ? "bg-indigo-600 shadow-lg shadow-indigo-900/20 text-white"
                                 : "text-slate-400 hover:bg-slate-900/50 hover:text-white"
-                                }`}
+                                } `}
                         >
-                            <item.icon className={`w-5 h-5 transition-colors ${location.pathname === item.path ? "text-white" : "text-slate-500 group-hover:text-emerald-400"}`} />
+                            <item.icon className={`w-5 h-5 transition-colors ${location.pathname === item.path ? "text-white" : "text-slate-500 group-hover:text-emerald-400"} `} />
                             <span className="font-medium text-sm">{item.label}</span>
                         </Link>
                     ))}
@@ -160,7 +161,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Mobile Header */}
             <header className="md:hidden flex-none h-16 bg-white border-b z-40 flex items-center px-4 justify-between shrink-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+                    <Sheet open={open} onOpenChange={setOpen}>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="-ml-2">
+                                <Menu className="w-6 h-6 text-slate-700" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="p-0 w-72 border-r-0">
+                            <div className="sr-only">
+                                <SheetTitle>Mobile Navigation Menu</SheetTitle>
+                                <SheetDescription>
+                                    Access main navigation links and profile settings.
+                                </SheetDescription>
+                            </div>
+                            <SidebarContent />
+                        </SheetContent>
+                    </Sheet>
                     <span className="font-bold text-lg text-slate-900">LifeOS AI</span>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
@@ -183,37 +200,30 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Mobile Bottom Navigation */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 z-50 flex items-center justify-around px-2 pb-safe">
-                <Link to="/" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname === "/" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"}`}>
+                <Link to="/" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname === "/" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"} `}>
                     <LayoutDashboard className="w-6 h-6" />
                     <span className="text-[10px] font-medium">Home</span>
                 </Link>
-                <Link to="/wellness" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname.startsWith("/wellness") ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"}`}>
-                    <Activity className="w-6 h-6" />
-                    <span className="text-[10px] font-medium">Wellness</span>
+                <Link to="/brain-training" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname === "/brain-training" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"} `}>
+                    <BrainCircuit className="w-6 h-6" />
+                    <span className="text-[10px] font-medium">Games</span>
                 </Link>
-                <Link to="/ask-ai" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname === "/ask-ai" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"}`}>
+                <Link to="/ask-ai" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname === "/ask-ai" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"} `}>
                     <div className="w-10 h-10 -mt-8 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg border-4 border-slate-50">
                         <Bot className="w-6 h-6 text-white" />
                     </div>
                     <span className="text-[10px] font-medium">Ask AI</span>
                 </Link>
-                <Link to="/transactions" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname === "/transactions" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"}`}>
+                <Link to="/wellness" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname.startsWith("/wellness") ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"} `}>
+                    <Activity className="w-6 h-6" />
+                    <span className="text-[10px] font-medium">Wellness</span>
+                </Link>
+                <Link to="/transactions" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname === "/transactions" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"} `}>
                     <CreditCard className="w-6 h-6" />
                     <span className="text-[10px] font-medium">Finance</span>
                 </Link>
-
-                <Sheet open={open} onOpenChange={setOpen}>
-                    <SheetTrigger asChild>
-                        <button className="flex flex-col items-center gap-1 p-2 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
-                            <Menu className="w-6 h-6" />
-                            <span className="text-[10px] font-medium">Menu</span>
-                        </button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="p-0 w-72 border-r-0">
-                        <SidebarContent />
-                    </SheetContent>
-                </Sheet>
             </nav>
+            {(location.pathname === "/" || location.pathname === "/transactions") && <AddTransactionDialog />}
         </div>
     );
 }

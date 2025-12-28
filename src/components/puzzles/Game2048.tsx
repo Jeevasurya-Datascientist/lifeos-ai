@@ -4,10 +4,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { RefreshCw, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { awardPoints } from "@/lib/rewards";
+import { useGameRewards } from "@/hooks/useGameRewards";
 
 export function Game2048() {
     const { user } = useAuth();
+    const { saveGameScore } = useGameRewards();
     const [board, setBoard] = useState<number[]>(Array(16).fill(0));
     const [score, setScore] = useState(0);
     const [highScore, setHighScore] = useState(0);
@@ -115,10 +116,9 @@ export function Game2048() {
             checkGameOver(newBoard);
 
             // Check for Win (2048 Tile)
-            if (newBoard.includes(2048) && !hasWon && user) {
-                setHasWon(true);
-                awardPoints(user.id, 50, "Reached 2048 Tile! 🧠");
-            }
+            setHasWon(true);
+            // Bonus for winning
+            saveGameScore('2048_win', 500, 0.1); // 50 coins
         }
     }, [board, gameOver, highScore]);
 
@@ -153,13 +153,8 @@ export function Game2048() {
     };
 
     const saveScore = async (finalScore: number) => {
-        if (!user) return;
-        await supabase.from('brain_training_scores').insert({
-            user_id: user.id,
-            game_type: '2048',
-            score: finalScore,
-            metadata: { date: new Date().toISOString() }
-        });
+        // Rate 0.05: 1000 score = 50 coins
+        await saveGameScore('2048', finalScore, 0.05);
     };
 
     // Check for 2048 tile win

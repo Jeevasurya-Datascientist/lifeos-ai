@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Radio, Play, Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGameRewards } from "@/hooks/useGameRewards";
 
 const COLORS = [
     { id: 0, color: "bg-red-500", active: "bg-red-400 shadow-[0_0_20px_rgba(248,113,113,0.8)]" },
@@ -14,6 +15,7 @@ const COLORS = [
 
 export function SimonSays() {
     const { user } = useAuth();
+    const { saveGameScore } = useGameRewards();
     const [sequence, setSequence] = useState<number[]>([]);
     const [playingIdx, setPlayingIdx] = useState(0); // Player's progress in current turn
     const [isPlayerTurn, setIsPlayerTurn] = useState(false);
@@ -98,13 +100,8 @@ export function SimonSays() {
     };
 
     const saveScore = async (finalScore: number) => {
-        if (!user) return;
-        await supabase.from('brain_training_scores').insert({
-            user_id: user.id,
-            game_type: 'simon_says',
-            score: finalScore,
-            metadata: { date: new Date().toISOString() }
-        });
+        // Rate 0.5: Level 10 = 5 Coins
+        await saveGameScore('simon_says', finalScore, 0.5);
     };
 
     return (
