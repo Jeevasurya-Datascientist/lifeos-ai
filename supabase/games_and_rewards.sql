@@ -11,10 +11,12 @@ create table if not exists public.brain_training_scores (
 -- RLS for scores
 alter table public.brain_training_scores enable row level security;
 
+drop policy if exists "Users can view their own scores" on public.brain_training_scores;
 create policy "Users can view their own scores"
     on public.brain_training_scores for select
     using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert their own scores" on public.brain_training_scores;
 create policy "Users can insert their own scores"
     on public.brain_training_scores for insert
     with check (auth.uid() = user_id);
@@ -33,10 +35,12 @@ create table if not exists public.user_rewards (
 -- RLS for rewards
 alter table public.user_rewards enable row level security;
 
+drop policy if exists "Users can view their own rewards" on public.user_rewards;
 create policy "Users can view their own rewards"
     on public.user_rewards for select
     using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert their own rewards" on public.user_rewards;
 create policy "Users can insert their own rewards"
     on public.user_rewards for insert
     with check (auth.uid() = user_id);

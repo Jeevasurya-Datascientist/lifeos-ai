@@ -34,7 +34,7 @@ export function TicTacToe() {
             .from('brain_training_scores')
             .select('score')
             .eq('user_id', user.id)
-            .eq('game_type', 'tictactoe_wins')
+            .eq('game_type', 'tictactoe')
             .order('score', { ascending: false })
             .limit(1)
             .single();
