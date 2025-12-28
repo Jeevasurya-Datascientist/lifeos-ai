@@ -36,8 +36,12 @@ export default function SubscriptionPage() {
 
         try {
             // 1. Create Subscription via Edge Function
+            // Force authorization header to prevent stale session issues
             const { data: subscription, error } = await supabase.functions.invoke('create-razorpay-subscription', {
-                body: { plan_id: planId }
+                body: { plan_id: planId },
+                headers: {
+                    Authorization: `Bearer ${await supabase.auth.getSession().then(({ data }) => data.session?.access_token || "")}`
+                }
             });
 
             if (error) throw error;
