@@ -199,19 +199,7 @@ export default function SubscriptionPage() {
                     Upgrade to LifeOS Pro to unlock the full power of AI automation, unlimited brain training, and premium insights.
                 </p>
 
-                {/* Billing Toggle */}
-                <div className="flex items-center justify-center gap-4 pt-8">
-                    <span className={cn("text-sm font-semibold transition-colors", billingCycle === 'monthly' ? "text-slate-900" : "text-slate-400")}>Monthly</span>
-                    <Switch
-                        checked={billingCycle === 'yearly'}
-                        onCheckedChange={(c) => setBillingCycle(c ? 'yearly' : 'monthly')}
-                        className="data-[state=checked]:bg-indigo-600"
-                    />
-                    <span className={cn("text-sm font-semibold transition-colors flex items-center gap-2", billingCycle === 'yearly' ? "text-slate-900" : "text-slate-400")}>
-                        Yearly
-                        <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase tracking-wide">Save 17%</span>
-                    </span>
-                </div>
+                {/* Billing Toggle Removed */}
             </div>
 
             {/* Plans Grid */}

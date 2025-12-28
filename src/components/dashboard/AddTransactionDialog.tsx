@@ -67,7 +67,7 @@ export function AddTransactionDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg p-0">
+                <Button className="fixed bottom-20 md:bottom-6 right-6 rounded-full w-14 h-14 shadow-lg p-0 z-40">
                     <PlusCircle className="w-8 h-8" />
                 </Button>
             </DialogTrigger>

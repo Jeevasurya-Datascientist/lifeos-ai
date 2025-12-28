@@ -161,16 +161,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Mobile Header */}
             <header className="md:hidden flex-none h-16 bg-white border-b z-40 flex items-center px-4 justify-between shrink-0">
                 <div className="flex items-center gap-2">
-                    <Sheet open={open} onOpenChange={setOpen}>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <Menu className="w-6 h-6" />
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="p-0 w-72 border-r-0">
-                            <SidebarContent />
-                        </SheetContent>
-                    </Sheet>
                     <span className="font-bold text-lg text-slate-900">LifeOS AI</span>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
@@ -185,11 +175,45 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </header>
 
             {/* Main Content Area */}
-            <main className="flex-1 h-full overflow-y-auto overflow-x-hidden bg-slate-50 relative scrolling-touch">
+            <main className="flex-1 h-full overflow-y-auto overflow-x-hidden bg-slate-50 relative scrolling-touch pb-20 md:pb-0">
                 <div className="min-h-full">
                     {children}
                 </div>
             </main>
+
+            {/* Mobile Bottom Navigation */}
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 z-50 flex items-center justify-around px-2 pb-safe">
+                <Link to="/" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname === "/" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"}`}>
+                    <LayoutDashboard className="w-6 h-6" />
+                    <span className="text-[10px] font-medium">Home</span>
+                </Link>
+                <Link to="/wellness" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname.startsWith("/wellness") ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"}`}>
+                    <Activity className="w-6 h-6" />
+                    <span className="text-[10px] font-medium">Wellness</span>
+                </Link>
+                <Link to="/ask-ai" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname === "/ask-ai" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"}`}>
+                    <div className="w-10 h-10 -mt-8 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg border-4 border-slate-50">
+                        <Bot className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-[10px] font-medium">Ask AI</span>
+                </Link>
+                <Link to="/transactions" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${location.pathname === "/transactions" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"}`}>
+                    <CreditCard className="w-6 h-6" />
+                    <span className="text-[10px] font-medium">Finance</span>
+                </Link>
+
+                <Sheet open={open} onOpenChange={setOpen}>
+                    <SheetTrigger asChild>
+                        <button className="flex flex-col items-center gap-1 p-2 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
+                            <Menu className="w-6 h-6" />
+                            <span className="text-[10px] font-medium">Menu</span>
+                        </button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="p-0 w-72 border-r-0">
+                        <SidebarContent />
+                    </SheetContent>
+                </Sheet>
+            </nav>
         </div>
     );
 }
