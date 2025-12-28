@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Zap, Crown, Shield, Star, Sparkles, Infinity, Bot, GraduationCap, Briefcase } from "lucide-react";
+import { Check, Zap, Crown, Shield, Star, Sparkles, Infinity, Bot } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 // Types for Razorpay
@@ -15,6 +16,7 @@ declare global {
 
 export default function SubscriptionPage() {
     const { user, refreshProfile } = useAuth();
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [loading, setLoading] = useState<string | null>(null);
 
     // Load Razorpay Script
@@ -34,6 +36,7 @@ export default function SubscriptionPage() {
 
         try {
             // 1. Create Subscription via Edge Function
+            // Force authorization header to prevent stale session issues
             const { data: subscription, error } = await supabase.functions.invoke('create-razorpay-subscription', {
                 body: { plan_id: planId },
                 headers: {
@@ -45,12 +48,13 @@ export default function SubscriptionPage() {
             if (!subscription || !subscription.id) throw new Error("Failed to create subscription");
 
             // 2. Open Razorpay Checkout
+            // NOTE: Replace 'YOUR_KEY_ID' with your actual Razorpay Key ID
             const options = {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 subscription_id: subscription.id,
                 name: "LifeOS AI",
                 description: `${tierName} Subscription`,
-                image: "https://lifeos-ai.com/logo.png",
+                image: "https://lifeos-ai.com/logo.png", // Replace with valid logo URL
                 handler: async function (response: any) {
                     toast.success(`Subscription Successful! ID: ${response.razorpay_subscription_id}`);
 
@@ -82,6 +86,7 @@ export default function SubscriptionPage() {
 
         } catch (error: any) {
             console.error("Subscription Error:", error);
+
             if (error.message?.includes("401")) {
                 toast.error("Session expired or unauthorized. Please sign out and log in again.");
             } else if (error.message?.includes("Missing Razorpay Keys")) {
@@ -94,16 +99,16 @@ export default function SubscriptionPage() {
         }
     };
 
-    const flexPlans = [
+    const plans = [
         {
-            name: "Daily Plan",
-            description: "24-Hour full access.",
-            price: "₹12",
-            originalPrice: "₹24",
+            name: "Daily",
+            description: "24-Hour full access power pass",
+            price: "₹9",
             period: "/day",
             features: [
+                "Unlock All Features",
+                "Try Premium Games",
                 "Full AI Analysis",
-                "Unlock All Games",
                 "Instant Activation"
             ],
             cta: "Get Daily Pass",
@@ -111,111 +116,119 @@ export default function SubscriptionPage() {
             border: "border-amber-200",
             buttonVariant: "outline" as const,
             icon: Zap,
-            planId: "plan_daily_new"
+            planId: "plan_daily_placeholder"
         },
         {
-            name: "Monthly Plan",
-            description: "Most popular choice.",
-            price: "₹99",
-            originalPrice: "₹150",
-            period: "/mo",
+            name: "Weekly",
+            description: "7-Day trial pass for full feature access",
+            price: "₹49",
+            period: "/week",
             features: [
-                "Everything in Daily",
-                "Progress Tracking",
+                "Full Pro Access",
+                "Brain Training Unlocked",
+                "Advanced AI Models",
                 "Cancel Anytime"
             ],
-            cta: "Start Monthly",
+            cta: "Start 7-Day Pass",
             gradient: "from-blue-500/10 to-cyan-500/10",
             border: "border-blue-500/30",
-            buttonVariant: "default" as const,
-            icon: Sparkles,
-            popular: true,
-            planId: "plan_monthly_new"
-        },
-        {
-            name: "Yearly Plan",
-            description: "Best value for long term.",
-            price: "₹999",
-            originalPrice: "₹1200",
-            period: "/yr",
-            save: "Save 30%",
-            features: [
-                "All Pro Features",
-                "Priority Support",
-                "Early Access to New Features"
-            ],
-            cta: "Go Yearly",
-            gradient: "from-indigo-500/10 to-purple-500/10",
-            border: "border-indigo-500/30",
             buttonVariant: "outline" as const,
-            icon: Crown,
-            planId: "plan_yearly_new"
-        }
-    ];
-
-    const rolePlans = [
+            icon: Sparkles,
+            planId: "plan_weekly_placeholder" // Replace with real Razorpay Plan ID
+        },
         {
             name: "Student",
-            description: "Essential tools for learners.",
-            price: "₹49",
-            period: "/mo",
-            bg: "bg-emerald-50",
-            border: "border-emerald-200",
-            icon: GraduationCap,
-            features: ["Study Focus Tools", "Career Roadmap", "Exam Stress Management"],
-            planId: "plan_student_basic"
+            description: "Affordable access for learners",
+            price: billingCycle === 'monthly' ? "₹199" : "₹1,999",
+            period: billingCycle === 'monthly' ? "/mo" : "/yr",
+            save: billingCycle === 'yearly' ? "Save 16%" : null,
+            features: [
+                "Everything in Basic",
+                "Unlimited Brain Training",
+                "Career & Skill Tracking",
+                "Basic AI Chat",
+                "Study Focus Tools"
+            ],
+            cta: "Get Student Plan",
+            gradient: "from-green-500/10 to-emerald-500/10",
+            border: "border-green-500/30",
+            buttonVariant: "default" as const,
+            icon: Bot,
+            popular: true,
+            highlight: true,
+            planId: "plan_student_placeholder" // Replace with real Razorpay Plan ID
         },
         {
-            name: "Professional",
-            description: "Power tools for career growth.",
-            price: "₹199",
-            period: "/mo",
-            bg: "bg-slate-50",
-            border: "border-slate-200",
-            icon: Briefcase,
-            features: ["Advanced Analytics", "Meeting AI Assistant", "Financial Forecasting"],
-            planId: "plan_pro_basic"
+            name: "Pro",
+            description: "Maximum power for professionals",
+            price: billingCycle === 'monthly' ? "₹699" : "₹6,999",
+            period: billingCycle === 'monthly' ? "/mo" : "/yr",
+            save: billingCycle === 'yearly' ? "Save 17%" : null,
+            features: [
+                "Everything in Student",
+                "Priority AI Response (GPT-4)",
+                "Detailed Financial Analytics",
+                "Data Export & API Access",
+                "Premium Support"
+            ],
+            cta: "Upgrade to Pro",
+            gradient: "from-indigo-500/10 to-purple-500/10",
+            border: "border-indigo-500/30",
+            buttonVariant: "default" as const,
+            icon: Crown,
+            planId: "plan_RvuYWDWlwSbY00" // Existing ID
         }
     ];
 
     return (
-        <div className="min-h-full py-12 px-4 md:px-8 max-w-7xl mx-auto space-y-16">
+        <div className="min-h-full py-12 px-4 md:px-8 max-w-7xl mx-auto space-y-12">
 
             {/* Header Section */}
             <div className="text-center space-y-6 relative">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -z-10" />
+
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-medium mb-4">
                     <Sparkles className="w-4 h-4" />
                     <span className="uppercase tracking-wide text-xs">Unlock your potential</span>
                 </div>
+
                 <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-tight">
-                    Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Access Level</span>
+                    Invest in your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Operating System</span>
                 </h1>
                 <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-medium">
-                    Flexible plans designed for everyone.
+                    Upgrade to LifeOS Pro to unlock the full power of AI automation, unlimited brain training, and premium insights.
                 </p>
+
+                {/* Billing Toggle */}
+                <div className="flex items-center justify-center gap-4 pt-8">
+                    <span className={cn("text-sm font-semibold transition-colors", billingCycle === 'monthly' ? "text-slate-900" : "text-slate-400")}>Monthly</span>
+                    <Switch
+                        checked={billingCycle === 'yearly'}
+                        onCheckedChange={(c) => setBillingCycle(c ? 'yearly' : 'monthly')}
+                        className="data-[state=checked]:bg-indigo-600"
+                    />
+                    <span className={cn("text-sm font-semibold transition-colors flex items-center gap-2", billingCycle === 'yearly' ? "text-slate-900" : "text-slate-400")}>
+                        Yearly
+                        <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase tracking-wide">Save 17%</span>
+                    </span>
+                </div>
             </div>
 
-            {/* Main Time-Based Plans */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-                {flexPlans.map((plan) => (
+            {/* Plans Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start pt-8">
+                {plans.map((plan) => (
                     <div
                         key={plan.name}
                         className={cn(
                             "relative rounded-3xl p-8 transition-all duration-300",
                             "bg-white border",
                             plan.border,
-                            plan.popular ? "shadow-2xl scale-105 z-10 ring-4 ring-indigo-500/10" : "shadow-xl hover:shadow-2xl hover:-translate-y-1"
+                            plan.highlight ? "shadow-2xl scale-105 z-10 ring-4 ring-indigo-500/10" : "shadow-xl hover:shadow-2xl hover:-translate-y-1"
                         )}
                     >
                         {plan.popular && (
                             <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg">
                                 Most Popular
-                            </div>
-                        )}
-                        {plan.save && (
-                            <div className="absolute top-4 right-4 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                                {plan.save}
                             </div>
                         )}
 
@@ -224,16 +237,16 @@ export default function SubscriptionPage() {
                         <div className="relative z-10 space-y-6">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                    <plan.icon className="w-5 h-5 text-indigo-600" />
+                                    {plan.icon && <plan.icon className={cn("w-5 h-5", plan.name === 'Lifetime' ? "text-amber-500" : "text-indigo-600")} />}
                                     {plan.name}
                                 </h3>
+                                {plan.icon && plan.name === 'Lifetime' && <Infinity className="w-5 h-5 text-amber-500" />}
                             </div>
 
                             <div className="space-y-1">
-                                <div className="flex items-baseline gap-2">
+                                <div className="flex items-baseline gap-1">
                                     <span className="text-4xl font-black text-slate-900">{plan.price}</span>
-                                    <span className="text-lg text-slate-400 font-medium line-through decoration-slate-400/50">{plan.originalPrice}</span>
-                                    <span className="text-slate-500 font-medium text-sm">{plan.period}</span>
+                                    {plan.period && <span className="text-slate-500 font-medium">{plan.period}</span>}
                                 </div>
                                 <p className="text-sm text-slate-500 font-medium leading-relaxed">
                                     {plan.description}
@@ -255,11 +268,12 @@ export default function SubscriptionPage() {
 
                             <Button
                                 className={cn("w-full h-12 rounded-xl font-bold text-base transition-all",
-                                    plan.popular ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25" : ""
+                                    plan.name === 'Lifetime' ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25" :
+                                        plan.highlight ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25" : ""
                                 )}
                                 variant={plan.buttonVariant}
                                 disabled={loading === plan.name}
-                                onClick={() => handleSubscribe(plan.planId, plan.name)}
+                                onClick={() => plan.planId && handleSubscribe(plan.planId, plan.name)}
                             >
                                 {loading === plan.name ? 'Processing...' : plan.cta}
                             </Button>
@@ -268,36 +282,11 @@ export default function SubscriptionPage() {
                 ))}
             </div>
 
-            {/* Specialized Role Plans */}
-            <div className="max-w-4xl mx-auto pt-8 border-t border-slate-100">
-                <div className="text-center mb-8">
-                    <h2 className="text-2xl font-bold text-slate-900">Tailored for You</h2>
-                    <p className="text-slate-500">Specialized plans with exclusive features for your role.</p>
-                </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                    {rolePlans.map((plan) => (
-                        <div key={plan.name} className={cn("p-6 rounded-2xl border flex flex-col md:flex-row items-center gap-6 hover:shadow-lg transition-all cursor-pointer bg-white", plan.border)}>
-                            <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center shrink-0", plan.bg)}>
-                                <plan.icon className="w-8 h-8 text-slate-700" />
-                            </div>
-                            <div className="flex-1 text-center md:text-left space-y-1">
-                                <h3 className="font-bold text-lg text-slate-900">{plan.name}</h3>
-                                <p className="text-sm text-slate-500">{plan.description}</p>
-                                <div className="text-sm font-semibold text-slate-900 pt-1">
-                                    {plan.price} <span className="text-slate-400 font-normal">{plan.period}</span>
-                                </div>
-                            </div>
-                            <Button variant="ghost" onClick={() => handleSubscribe(plan.planId, plan.name)} className="shrink-0 bg-slate-50 hover:bg-slate-100 text-slate-900">
-                                Select
-                            </Button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
             {/* Trust Section */}
             <div className="mt-16 text-center">
+                <p className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-6">Trusted by Productivity Enthusiasts</p>
                 <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-40 grayscale">
+                    {/* Placeholder Logos */}
                     <div className="flex items-center gap-2 font-bold text-xl"><Shield className="w-6 h-6" /> SecurePay</div>
                     <div className="flex items-center gap-2 font-bold text-xl"><Bot className="w-6 h-6" /> AI Powered</div>
                     <div className="flex items-center gap-2 font-bold text-xl"><Star className="w-6 h-6" /> 5-Star Rated</div>
