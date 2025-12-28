@@ -17,6 +17,7 @@ import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import EmployerDashboard from "./pages/EmployerDashboard";
 // import RechargeBills from "./pages/services/RechargeBills"; // Removed
+import BillRemindersPage from "./pages/financial/BillRemindersPage";
 import SubscriptionPage from "./pages/financial/SubscriptionPage";
 import TransactionsPage from "./pages/financial/TransactionsPage";
 import AnalyticsPage from "./pages/analytics/AnalyticsPage";
@@ -80,7 +81,7 @@ const App = () => (
 
               {/* Protected Routes (Wrapped in AppLayout via ProtectedRoute) */}
               <Route path="/onboarding" element={<ProtectedRoute><OnboardingFlow /></ProtectedRoute>} />
-              {/* Removed Recharge Route */}
+              <Route path="/recharge" element={<ProtectedRoute><BillRemindersPage /></ProtectedRoute>} />
               <Route path="/subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/ask-ai" element={<ProtectedRoute><AskLifeOS /></ProtectedRoute>} />
