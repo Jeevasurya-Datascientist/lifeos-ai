@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Briefcase, BookOpen, GraduationCap, TrendingUp, Search, ExternalLink, PlayCircle, Plus, X, Newspaper } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -104,6 +105,7 @@ const STATIC_NEWS: NewsItem[] = [
 ];
 
 export default function CareerPage() {
+    const navigate = useNavigate();
     const { user, profile } = useAuth();
     const [searchTerm, setSearchTerm] = useState("");
     const [skills, setSkills] = useState<string[]>([]);
@@ -212,31 +214,27 @@ export default function CareerPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Daily News Feed */}
-                <Card className="md:col-span-2 border-indigo-100 shadow-sm relative overflow-hidden">
+                <Card className="md:col-span-2 border-indigo-100 shadow-sm relative overflow-hidden group cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/career/news")}>
                     <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500" />
+                    <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ExternalLink className="w-5 h-5 text-indigo-400" />
+                    </div>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Newspaper className="w-5 h-5 text-indigo-600" />
                             Daily Tech & AI Job Market News
                         </CardTitle>
-                        <CardDescription>Latest trends from December 2025.</CardDescription>
+                        <CardDescription>Stay ahead with daily curated updates.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid gap-4">
-                            {newsItems.map((news, i) => (
-                                <div key={i} className="flex gap-4 items-start p-3 rounded-lg hover:bg-slate-50 transition-colors">
-                                    <div className={`p-2 rounded-full mt-1 ${news.trend === 'up' ? 'bg-green-100 text-green-600' :
-                                        news.trend === 'down' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'
-                                        }`}>
-                                        <TrendingUp className={`w-4 h-4 ${news.trend === 'down' ? 'rotate-180' : ''}`} />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-semibold text-slate-900">{news.title}</h4>
-                                        <p className="text-sm text-slate-600 mt-1">{news.summary}</p>
-                                        <p className="text-xs text-slate-400 mt-2 font-medium">{news.source}</p>
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="flex flex-col gap-4">
+                            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                <h4 className="font-semibold text-lg text-slate-800 mb-1 line-clamp-1">{newsItems[0]?.title || "Latest Tech Trends"}</h4>
+                                <p className="text-slate-500 text-sm line-clamp-2">{newsItems[0]?.summary}</p>
+                            </div>
+                            <Button className="w-fit self-end gap-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200" variant="outline" onClick={(e) => { e.stopPropagation(); navigate("/career/news"); }}>
+                                Read All Updates <PlayCircle className="w-4 h-4 ml-1" />
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -277,6 +275,9 @@ export default function CareerPage() {
                             <DialogContent>
                                 <DialogHeader>
                                     <DialogTitle>Add a Skill</DialogTitle>
+                                    <DialogDescription>
+                                        Add a new skill to your profile.
+                                    </DialogDescription>
                                 </DialogHeader>
                                 <div className="py-4">
                                     <Input

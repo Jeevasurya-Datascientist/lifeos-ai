@@ -11,6 +11,8 @@ interface LanguageContextType {
 const translations: Record<Language, Record<string, string>> = {
     en: {
         "hello": "Hello",
+        "daily_pulse": "Daily Pulse",
+        "read_full_story": "Read Full Story",
         "welcome": "Welcome to your LifeOS",
         "wallet_balance": "Wallet Balance",
         "ai_focus": "AI Focus",

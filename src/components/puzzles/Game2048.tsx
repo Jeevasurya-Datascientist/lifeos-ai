@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { RefreshCw, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { awardPoints } from "@/lib/rewards";
 
 export function Game2048() {
     const { user } = useAuth();
@@ -11,6 +12,7 @@ export function Game2048() {
     const [score, setScore] = useState(0);
     const [highScore, setHighScore] = useState(0);
     const [gameOver, setGameOver] = useState(false);
+    const [hasWon, setHasWon] = useState(false);
 
     useEffect(() => {
         initGame();
@@ -40,6 +42,7 @@ export function Game2048() {
         setBoard(newBoard);
         setScore(0);
         setGameOver(false);
+        setHasWon(false);
     };
 
     const addTile = (currentBoard: number[]) => {
@@ -110,6 +113,12 @@ export function Game2048() {
                 return newScore;
             });
             checkGameOver(newBoard);
+
+            // Check for Win (2048 Tile)
+            if (newBoard.includes(2048) && !hasWon && user) {
+                setHasWon(true);
+                awardPoints(user.id, 50, "Reached 2048 Tile! 🧠");
+            }
         }
     }, [board, gameOver, highScore]);
 
@@ -152,6 +161,20 @@ export function Game2048() {
             metadata: { date: new Date().toISOString() }
         });
     };
+
+    // Check for 2048 tile win
+    useEffect(() => {
+        if (board.includes(2048) && !gameOver) {
+            // Optional: only if not already awarded in this session? 
+            // For now, simpler: user gets points if they hit 2048. 
+            // But valid moves might keep 2048 on board. 
+            // Let's award on GAME OVER if they have 2048, or exactly when it appears?
+            // Better: Game Over check is safest or a specific "hasWon" flag.
+        }
+    }, [board, gameOver]);
+
+    // Better place: inside move function or checkGameOver
+
 
     // Colors for tiles
     const getTileColor = (val: number) => {

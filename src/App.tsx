@@ -23,6 +23,7 @@ import AnalyticsPage from "./pages/analytics/AnalyticsPage";
 import WellnessPage from "./pages/wellness/WellnessPage";
 import BrainTrainingPage from "./pages/wellness/BrainTrainingPage";
 import BrainGamePage from "./pages/wellness/BrainGamePage";
+import DailyNewsPage from "./pages/career/DailyNewsPage";
 import CareerPage from "./pages/career/CareerPage";
 import AskLifeOS from "./pages/ai/AskLifeOS";
 import Profile from "./pages/settings/Profile";
@@ -82,6 +83,7 @@ const App = () => (
               <Route path="/wellness" element={<ProtectedRoute><WellnessPage /></ProtectedRoute>} />
               <Route path="/brain-training" element={<ProtectedRoute><BrainTrainingPage /></ProtectedRoute>} />
               <Route path="/brain-training/game/:gameId" element={<ProtectedRoute><BrainGamePage /></ProtectedRoute>} />
+              <Route path="/career/news" element={<ProtectedRoute><DailyNewsPage /></ProtectedRoute>} />
               <Route path="/career" element={<ProtectedRoute><CareerPage /></ProtectedRoute>} />
 
               <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />

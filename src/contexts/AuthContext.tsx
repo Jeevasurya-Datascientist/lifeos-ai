@@ -154,6 +154,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 }
             } catch (error) {
                 console.error("Auth initialization error:", error);
+                // If the refresh token is invalid, force a sign out to clear stale data
+                if (error instanceof Error && (error.message.includes("Invalid Refresh Token") || error.message.includes("Refresh Token Not Found"))) {
+                    console.warn("Detected invalid refresh token, clearing session.");
+                    await supabase.auth.signOut();
+                    // Fallback: Clear all Supabase tokens from local storage
+                    Object.keys(localStorage).forEach(key => {
+                        if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+                            localStorage.removeItem(key);
+                        }
+                    });
+                }
             } finally {
                 if (mounted) {
                     setLoading(false);

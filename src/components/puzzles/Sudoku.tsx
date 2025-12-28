@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Grid, Eraser, RotateCcw, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { awardPoints } from "@/lib/rewards";
 
 // Simple initial valid board pattern (shifts) to guarantee validity
 const INITIAL_BOARD = [
@@ -154,6 +155,10 @@ export function Sudoku() {
     const saveWin = async () => {
         setWins(w => w + 1);
         if (!user) return;
+
+        // Award points
+        awardPoints(user.id, 20, "Solved Sudoku! 🧩");
+
         await supabase.from('brain_training_scores').insert({
             user_id: user.id,
             game_type: 'sudoku',

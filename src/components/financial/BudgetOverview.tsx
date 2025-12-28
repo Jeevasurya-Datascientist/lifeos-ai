@@ -30,7 +30,7 @@ export function BudgetOverview({ currentSpend }: BudgetOverviewProps) {
                 .from('user_settings')
                 .select('monthly_budget')
                 .eq('user_id', user?.id)
-                .single();
+                .maybeSingle();
             if (data) setBudget(data.monthly_budget || 0);
         } catch (error) {
             console.error('Error fetching budget:', error);

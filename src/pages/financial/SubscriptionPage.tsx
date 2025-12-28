@@ -81,8 +81,15 @@ export default function SubscriptionPage() {
             rzp1.open();
 
         } catch (error: any) {
-            console.error(error);
-            toast.error(error.message || "Failed to initiate subscription.");
+            console.error("Subscription Error:", error);
+
+            if (error.message?.includes("401")) {
+                toast.error("Session expired or unauthorized. Please sign out and log in again.");
+            } else if (error.message?.includes("Missing Razorpay Keys")) {
+                toast.error("System configuration error: Payment keys missing.");
+            } else {
+                toast.error(error.message || "Failed to initiate subscription. Please try again.");
+            }
         } finally {
             setLoading(null);
         }
@@ -90,64 +97,82 @@ export default function SubscriptionPage() {
 
     const plans = [
         {
-            name: "Basic",
-            description: "Essential tools for personal growth",
-            price: "Free",
+            name: "Daily",
+            description: "24-Hour full access power pass",
+            price: "₹9",
+            period: "/day",
             features: [
-                "Daily Dashboard",
-                "Manual Transaction Tracking",
-                "3 Brain Gym Games",
-                "Basic AI Chat (Llama-3)",
-                "Community Support"
+                "Unlock All Features",
+                "Try Premium Games",
+                "Full AI Analysis",
+                "Instant Activation"
             ],
-            cta: "Current Plan",
-            gradient: "from-slate-100 to-slate-200",
-            border: "border-slate-200",
+            cta: "Get Daily Pass",
+            gradient: "from-amber-200 to-yellow-100",
+            border: "border-amber-200",
             buttonVariant: "outline" as const,
-            disabled: true,
-            planId: null
+            icon: Zap,
+            planId: "plan_daily_placeholder"
+        },
+        {
+            name: "Weekly",
+            description: "7-Day trial pass for full feature access",
+            price: "₹49",
+            period: "/week",
+            features: [
+                "Full Pro Access",
+                "Brain Training Unlocked",
+                "Advanced AI Models",
+                "Cancel Anytime"
+            ],
+            cta: "Start 7-Day Pass",
+            gradient: "from-blue-500/10 to-cyan-500/10",
+            border: "border-blue-500/30",
+            buttonVariant: "outline" as const,
+            icon: Sparkles,
+            planId: "plan_weekly_placeholder" // Replace with real Razorpay Plan ID
+        },
+        {
+            name: "Student",
+            description: "Affordable access for learners",
+            price: billingCycle === 'monthly' ? "₹199" : "₹1,999",
+            period: billingCycle === 'monthly' ? "/mo" : "/yr",
+            save: billingCycle === 'yearly' ? "Save 16%" : null,
+            features: [
+                "Everything in Basic",
+                "Unlimited Brain Training",
+                "Career & Skill Tracking",
+                "Basic AI Chat",
+                "Study Focus Tools"
+            ],
+            cta: "Get Student Plan",
+            gradient: "from-green-500/10 to-emerald-500/10",
+            border: "border-green-500/30",
+            buttonVariant: "default" as const,
+            icon: Bot,
+            popular: true,
+            highlight: true,
+            planId: "plan_student_placeholder" // Replace with real Razorpay Plan ID
         },
         {
             name: "Pro",
-            description: "Unlock full AI potential",
+            description: "Maximum power for professionals",
             price: billingCycle === 'monthly' ? "₹699" : "₹6,999",
             period: billingCycle === 'monthly' ? "/mo" : "/yr",
             save: billingCycle === 'yearly' ? "Save 17%" : null,
             features: [
-                "Everything in Basic",
-                "AI Transaction Scanning",
-                "Unlimited Brain Gym Access",
-                "Advanced AI Models (Mixtral/GPT-4)",
-                "Priority Support",
-                "Data Export"
+                "Everything in Student",
+                "Priority AI Response (GPT-4)",
+                "Detailed Financial Analytics",
+                "Data Export & API Access",
+                "Premium Support"
             ],
             cta: "Upgrade to Pro",
             gradient: "from-indigo-500/10 to-purple-500/10",
             border: "border-indigo-500/30",
             buttonVariant: "default" as const,
-            popular: true,
-            highlight: true,
-            icon: Zap,
-            planId: "plan_RvuYWDWlwSbY00" // Real Razorpay Pro Plan ID
-        },
-        {
-            name: "Lifetime",
-            description: "One-time payment, forever yours",
-            price: "₹14,999",
-            period: "one-time",
-            features: [
-                "Everything in Pro",
-                "Lifetime Updates",
-                "Early Access to New Features",
-                "Founder's Badge",
-                "Direct Developer Access"
-            ],
-            cta: "Get Lifetime Access",
-            gradient: "from-amber-500/10 to-orange-500/10",
-            border: "border-amber-500/30",
-            buttonVariant: "default" as const,
             icon: Crown,
-            planId: "plan_RvubjN2ClbZlsS" // Real Razorpay Lifetime Plan ID
+            planId: "plan_RvuYWDWlwSbY00" // Existing ID
         }
     ];
 
@@ -243,7 +268,7 @@ export default function SubscriptionPage() {
                                         plan.highlight ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25" : ""
                                 )}
                                 variant={plan.buttonVariant}
-                                disabled={plan.disabled || loading === plan.name}
+                                disabled={loading === plan.name}
                                 onClick={() => plan.planId && handleSubscribe(plan.planId, plan.name)}
                             >
                                 {loading === plan.name ? 'Processing...' : plan.cta}

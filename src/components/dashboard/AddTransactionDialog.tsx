@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { PlusCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { addTransaction } from "@/lib/transactions";
 // import { useQueryClient } from "@tanstack/react-query";
 
 export function AddTransactionDialog() {
@@ -39,35 +40,13 @@ export function AddTransactionDialog() {
             const amount = parseFloat(formData.amount);
             if (isNaN(amount) || amount <= 0) throw new Error("Invalid amount");
 
-            // 1. Insert Transaction
-            const { error: txError } = await supabase.from("transactions").insert({
-                user_id: user.id,
-                amount: amount,
+            await addTransaction(user.id, {
+                amount,
                 type: activeTab,
                 category: formData.category,
                 description: formData.description,
-                date: formData.date,
+                date: formData.date
             });
-
-            if (txError) throw txError;
-
-            // 2. Update Wallet Balance
-            // Currently we just fetch and add/subtract. 
-            // Ideally this should be a Postgres function or RPC for atomicity, 
-            // but for MVP client-side calc with RLS is okay-ish or better use an RPC.
-            // Let's do a simple RPC call if we had one, or two queries.
-
-            // Let's try to get current balance first
-            const { data: wallet } = await supabase.from("wallets").select("balance").eq("user_id", user.id).single();
-            const currentBalance = wallet?.balance || 0;
-            const newBalance = activeTab === "income" ? currentBalance + amount : currentBalance - amount;
-
-            const { error: walletError } = await supabase
-                .from("wallets")
-                .update({ balance: newBalance, updated_at: new Date().toISOString() })
-                .eq("user_id", user.id);
-
-            if (walletError) throw walletError;
 
             toast.success(`${activeTab === "income" ? "Income" : "Expense"} added!`);
             setOpen(false);
@@ -77,13 +56,6 @@ export function AddTransactionDialog() {
                 description: "",
                 date: new Date().toISOString().split("T")[0],
             });
-            // Invalidate queries to refresh UI
-            // Since we are not using React Query for fetching yet in Home.tsx (we used useEffect),
-            // we might need to rely on the page refreshing or migrating Home.tsx to React Query.
-            // For now, let's just reload the page or force update? 
-            // It's better to refactor Home.tsx to listen to DB changes or use React Query.
-            // For MVP speed: trigger a custom event or just reload.
-            window.location.reload();
 
         } catch (error: any) {
             toast.error(error.message || "Failed to add transaction");
@@ -102,6 +74,9 @@ export function AddTransactionDialog() {
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Add Transaction</DialogTitle>
+                    <DialogDescription>
+                        Enter the details of your expense or income below.
+                    </DialogDescription>
                 </DialogHeader>
 
                 <Tabs defaultValue="expense" value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
